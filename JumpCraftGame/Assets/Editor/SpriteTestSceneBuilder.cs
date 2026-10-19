@@ -96,13 +96,16 @@ namespace JumpCraft.EditorTools
 
         static void AddCharacter(string name, Sprite sprite, int sortingOrder, float centerX, float bottomY, int x, int y, int w, int h)
         {
-            var go = CreateSpriteObject(name, sprite, sortingOrder);
+            // The sprite sits on a child so CharacterAnimator can move it without moving the physics body.
+            var go = new GameObject(name);
+            var visual = CreateSpriteObject("Sprite", sprite, sortingOrder, go.transform);
             Place(go, sprite, centerX, bottomY);
             var body = go.AddComponent<Rigidbody2D>();
             body.constraints = RigidbodyConstraints2D.FreezeRotation;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
             var capsule = go.AddComponent<CapsuleCollider2D>();
             (capsule.size, capsule.offset) = PixelRect(sprite, x, y, w, h);
+            go.AddComponent<CharacterAnimator>().sprite = visual.GetComponent<SpriteRenderer>();
         }
 
         // Converts a pixel rectangle measured from the texture's top-left corner into a collider
