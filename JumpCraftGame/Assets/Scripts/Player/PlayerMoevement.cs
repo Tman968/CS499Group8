@@ -36,11 +36,26 @@ public class PlayerMovement : MonoBehaviour
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             isGrounded = false; // Prevent mid-air jumping
         }
+
+        // 3. Death check (falling below y = -8): Moves player back to main menu (death screen can be implemented later, or have a revive system with multiplayer?)
+        if (transform.position.y <= -8)
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("GameMenu");
+        }
+        
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // Resets grounded status when landing on a collider
-        isGrounded = true;
+        //Checks the contact between the player and the platform
+        //Prevents jumping on side and bottom of platforms
+        foreach (ContactPoint2D contact in collision.contacts)
+        {
+            if (contact.normal.y > 0.5f) //Creates a normal vector based on the y direction of the contact (on top of a platform is positive)
+            {
+                isGrounded = true;
+                break;
+            }
+        }
     }
 }
