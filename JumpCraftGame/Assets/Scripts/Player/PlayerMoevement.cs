@@ -12,6 +12,9 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D rb;
     private bool isGrounded = true;
 
+    //Read by CameraFollow to track the height of the ground the player is standing on.
+    public bool IsGrounded => isGrounded;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
