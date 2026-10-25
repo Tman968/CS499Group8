@@ -275,8 +275,8 @@ def main_range():
 # Trees and props
 
 
-def pine(c, x0, y0, height, ramp):
-    """Tiered pine, lit from the left. ramp: dark to light, at least 5 colors."""
+def pine(c, x0, y0, height, ramp, spread=0.24):
+    """Tiered pine, lit from the left. ramp: dark to light, at least 5 colors. spread: half width / height."""
     trunk = max(2, height // 9)
     for y in range(trunk):
         c.set(x0, y0 + y, ramp[1])
@@ -284,7 +284,7 @@ def pine(c, x0, y0, height, ramp):
             c.set(x0 + 1, y0 + y, ramp[0])
     tiers = max(2, height // 11)
     foliage = height - trunk
-    half = max(2.0, height * 0.24)
+    half = max(2.0, height * spread)
     for i in range(foliage):
         y = y0 + trunk + i
         t = i / foliage
@@ -373,6 +373,8 @@ def hills():
     ground = fbm(rng, w, 3, 5)
     clearing = fbm(rng, w, 2, 7)
     soil = [(12, 13, 20), (16, 18, 27), (21, 24, 34), (28, 32, 44), (38, 42, 56)]
+    back_ridge = fbm(rng, w, 2, 9)
+    back_soil = [mix(col, (40, 40, 64), 0.35) for col in soil]
     back_trees = [mix(col, (40, 40, 64), 0.35) for col in [(10, 14, 20), (15, 22, 28), (21, 31, 36), (29, 42, 46), (40, 56, 56)]]
     front_trees = [(9, 12, 17), (13, 19, 24), (18, 28, 31), (25, 39, 39), (36, 54, 50)]
     c = Canvas(w, h)
@@ -380,21 +382,29 @@ def hills():
     def gh(x):
         return round(68 + ground(x) * 14)
 
-    for x in range(w):
-        top = gh(x)
-        for y in range(top + 1):
-            idx = 3 if y == top else 2 if top - y < 3 else 1 if top - y < 20 else 0
-            if idx == 2 and hash2(x, y) < 0.3:
-                idx = 1
-            c.set(x, y, soil[idx])
+    def back_gh(x):
+        return gh(x) + round(6 + back_ridge(x) * 5)
 
-    tower_x = 236
+    def fill_ground(height_at, ramp):
+        for x in range(w):
+            top = height_at(x)
+            for y in range(top + 1):
+                idx = 3 if y == top else 2 if top - y < 3 else 1 if top - y < 20 else 0
+                if idx == 2 and hash2(x, y) < 0.3:
+                    idx = 1
+                c.set(x, y, ramp[idx])
+
+    # A hazier ridge behind the main one, so the back row of trees has ground to stand on.
+    fill_ground(back_gh, back_soil)
     x = 0
     while x < w:
         if clearing(x) < 0.25:
-            pine(c, x, gh(x) + 4, rng.randint(12, 22), back_trees)
+            pine(c, x, back_gh(x) - 1, rng.randint(12, 22), back_trees)
         x += rng.randint(2, 5)
-    ruined_tower(c, tower_x, gh(tower_x + 5) - 3, [(20, 20, 30), (34, 33, 48), (52, 50, 70)])
+    fill_ground(gh, soil)
+
+    tower_x = 236
+    ruined_tower(c, tower_x, min(gh(tower_x + dx) for dx in range(15)) - 1, [(20, 20, 30), (34, 33, 48), (52, 50, 70)])
     x = 0
     while x < w:
         near_tower = tower_x - 10 < x < tower_x + 20
@@ -429,7 +439,8 @@ def near_forest():
     x = 10
     while x < w - 20:
         for _ in range(rng.randint(2, 5)):
-            pine(c, x + rng.randint(-6, 6), gh(x) - 1, rng.randint(44, 92), trees)
+            tx = x + rng.randint(-6, 6)
+            pine(c, tx, gh(tx) - 1, rng.randint(44, 92), trees)
             x += rng.randint(8, 16)
         x += rng.randint(44, 90)
     for x in (rng.randrange(w) for _ in range(3)):
@@ -439,6 +450,327 @@ def near_forest():
     c.save("Backdrop_NearForest.png")
 
 
+# ---------------------------------------------------------------------------------------------
+# Spooky forest biome. Same layer layout as the mountains (sky, moon, far, mid, near, front),
+# but there's no open horizon: the trunks run off the top of the screen and a canopy closes in
+# overhead when the camera climbs.
+
+FOG = (38, 48, 50)
+FAR_FOG = (62, 80, 78)  # the glow behind the furthest trees, so each row reads as a silhouette
+BARK = [(9, 7, 11), (14, 11, 16), (20, 16, 22), (28, 23, 30), (38, 32, 40)]
+LEAVES = [(5, 7, 9), (8, 11, 13), (12, 16, 18), (17, 22, 24), (24, 31, 32)]
+EYES = (255, 214, 90)
+GLOW = [(40, 140, 120), (90, 230, 190)]
+
+
+def eyes(c, x, y, glow=EYES):
+    for dx in (0, 3):
+        c.set(x + dx, y, glow)
+    for dx, dy in ((-1, 0), (1, 0), (2, 0), (4, 0), (0, -1), (3, -1)):
+        if not c.get(x + dx, y + dy)[3]:
+            c.set(x + dx, y + dy, (*mix(glow, FOG, 0.6), 90))
+
+
+def gnarled_tree(c, x0, y0, height, bark, rng, moss=None):
+    """Bare, twisted tree with a flared base and wandering branches."""
+    base = max(2, height // 16)
+    trunk_top = int(height * 0.55)
+    lean = rng.uniform(-0.2, 0.2)
+    bow = rng.uniform(-5, 5)
+    cx = x0
+    for y in range(trunk_top):
+        t = y / trunk_top
+        cx = x0 + lean * y + bow * math.sin(t * math.pi)
+        half = base * (1 - 0.55 * t) + base * 1.6 * max(0.0, 1 - t * 7)
+        left, right = round(cx - half), round(cx + half)
+        for x in range(left, right + 1):
+            col = bark[3] if x == left else bark[0] if x == right else bark[2] if x < cx else bark[1]
+            c.set(x, y0 + y, col)
+
+    def branch(x, y, angle, length, thick, depth):
+        for _ in range(int(length)):
+            x += math.cos(angle)
+            y += math.sin(angle)
+            angle += rng.uniform(-0.18, 0.18)
+            for k in range(thick):
+                c.set(round(x) + k, round(y), bark[2] if k == 0 else bark[1])
+        if moss and depth <= 1 and rng.random() < 0.6:
+            for dy in range(rng.randint(4, 14)):
+                if dither(round(x), round(y) - dy, 0.8):
+                    c.set(round(x), round(y) - dy, moss)
+        if depth:
+            for _ in range(rng.randint(2, 3)):
+                branch(x, y, angle + rng.uniform(-1.0, 1.0), length * rng.uniform(0.5, 0.7), max(1, thick - 1), depth - 1)
+
+    top = y0 + trunk_top
+    branch(cx, top, math.pi / 2 + rng.uniform(-0.3, 0.3), height * 0.3, max(1, base), 3)
+    for _ in range(rng.randint(1, 3)):
+        side = rng.choice((-1, 1))
+        branch(cx, y0 + trunk_top * rng.uniform(0.5, 0.9), math.pi / 2 - side * rng.uniform(0.6, 1.1), height * 0.25, max(1, base - 1), 2)
+
+
+def big_trunk(c, x0, width, top, bark, rng, hollow=False):
+    """A huge trunk from the ground to `top`, with a root flare and furrowed bark."""
+    sway = fbm(rng, 4096, 2, 30)
+    for y in range(top):
+        flare = width * 0.8 * max(0.0, 1 - y / 26) ** 2
+        offset = sway(y + x0 * 3) * 3
+        left = round(x0 - width / 2 - flare + offset)
+        right = round(x0 + width / 2 + flare + offset)
+        for x in range(left, right + 1):
+            r = (x - left) / max(1, right - left)
+            idx = 3 if r < 0.15 else 2 if r < 0.5 else 1 if r < 0.9 else 0
+            if (x - left) % 5 == 2 and hash2(x, y // 7) > 0.35:
+                idx -= 1  # furrows
+            if x == left and hash2(x, y) > 0.5:
+                idx = 4  # faint rim of light on the left edge
+            c.set(x, y, bark[clamp(idx, 0, 4)])
+    if hollow:
+        hy = rng.randint(34, 60)
+        for y in range(-8, 9):
+            for x in range(-5, 6):
+                if (x / 5.5) ** 2 + (y / 8.5) ** 2 < 1:
+                    c.set(x0 + x, hy + y, (3, 2, 5) if (x / 5.5) ** 2 + (y / 8.5) ** 2 < 0.7 else bark[0])
+        eyes(c, x0 - 2, hy + 1)
+    # Branches reaching out of the trunk higher up.
+    for _ in range(rng.randint(1, 2)):
+        side = rng.choice((-1, 1))
+        x, y = x0 + side * width / 2, rng.randint(top // 2, top - 50)
+        angle = math.pi / 2 - side * rng.uniform(0.7, 1.1)
+        for i in range(rng.randint(30, 60)):
+            x += math.cos(angle)
+            y += math.sin(angle)
+            angle += rng.uniform(-0.1, 0.1)
+            thick = max(1, 4 - i // 12)
+            for k in range(thick):
+                c.set(round(x), round(y) + k, bark[1] if k else bark[2])
+
+
+def forest_sky():
+    c = Canvas(320, 192)
+    rng = random.Random(101)
+    bands = [(6, 8, 11), (9, 12, 15), (13, 17, 20), (18, 24, 26), (25, 33, 34), (34, 44, 44), (46, 59, 58), (58, 74, 72)]
+    for y in range(c.h):
+        t = ((c.h - 1 - y) / (c.h - 1)) ** 1.3 * (len(bands) - 1)
+        i = min(int(t), len(bands) - 2)
+        edge = clamp((t - i - 0.55) / 0.45, 0, 1)
+        for x in range(c.w):
+            c.set(x, y, bands[i + 1] if dither(x, y, edge) else bands[i])
+    # Heavy, low clouds instead of a starfield.
+    cloud = fbm(rng, c.w, 4, 4)
+    for x in range(c.w):
+        for y in range(c.h):
+            n = cloud(x + y * 3) + (y - 120) / 90
+            if n > 0.35:
+                c.set(x, y, mix(c.get(x, y)[:3], (34, 40, 44), 0.25 if n < 0.55 else 0.4))
+    for _ in range(25):
+        c.set(rng.randrange(c.w), c.h - 1 - rng.randrange(60), (60, 70, 72))
+    c.save("Forest_Sky.png")
+
+
+def forest_moon():
+    c = Canvas(48, 48)
+    cx = cy = 23.5
+    pale = [(108, 122, 98), (150, 166, 128), (196, 206, 160)]
+    for y in range(c.h):
+        for x in range(c.w):
+            d = math.hypot(x - cx, y - cy)
+            bite = math.hypot(x - cx - 4.5, y - cy - 2.5)
+            if d <= 9.5 and bite > 8.5:
+                c.set(x, y, pale[2] if x - cx < -4 else pale[1] if bite > 10 else pale[0])
+            elif d <= 16 and dither(x, y, 0.3 * (16 - d) / 6.5):
+                c.set(x, y, (120, 140, 110, 50))
+    # A thin cloud dragging across it.
+    for x in range(8, 40):
+        y = 20 + round(math.sin(x / 5) * 1.5)
+        for dy in range(2):
+            if dither(x, y + dy, 0.75):
+                c.set(x, y + dy, (22, 28, 30, 220))
+    c.save("Forest_Moon.png")
+
+
+def forest_far():
+    w, h = 640, 224
+    rng = random.Random(110)
+    clearing = fbm(rng, w, 2, 6)
+    c = Canvas(w, h)
+    # Three rows of tall spires, the furthest the palest, with clearings where the sky glows through.
+    for row, fog in enumerate((0.8, 0.62, 0.45)):
+        ramp = [mix(col, FAR_FOG, fog) for col in LEAVES]
+        x = rng.randint(0, 8)
+        while x < w:
+            if clearing(x + row * 40) > 0.2 - row * 0.15:
+                pass
+            elif rng.random() < 0.2:
+                for y in range(rng.randint(110, 200)):  # bare snag
+                    c.set(x, y, ramp[2])
+                    c.set(x + 1, y, ramp[1])
+            else:
+                pine(c, x, -2, rng.randint(120, 216), ramp, spread=rng.uniform(0.14, 0.2))
+            x += rng.randint(14, 28)
+    apply_mist(c, 40, 120, FAR_FOG, 0.9)
+    c.save("Forest_FarTrees.png")
+
+
+def forest_mid():
+    w, h = 800, 224
+    rng = random.Random(120)
+    c = Canvas(w, h)
+    ramp = [mix(col, FOG, 0.25) for col in LEAVES]
+    bark = [mix(col, FOG, 0.25) for col in BARK]
+    moss = mix((30, 44, 30), FOG, 0.3)
+    x = 0
+    while x < w:
+        if rng.random() < 0.45:
+            gnarled_tree(c, x, 0, rng.randint(110, 190), bark, rng, moss)
+        else:
+            pine(c, x, -2, rng.randint(100, 200), ramp, spread=rng.uniform(0.14, 0.2))
+        x += rng.randint(28, 56)
+    # Something watching from between the trees.
+    for _ in range(5):
+        eyes(c, rng.randrange(w), rng.randint(30, 80))
+    apply_mist(c, 20, 90, FOG, 0.85)
+    c.save("Forest_MidTrees.png")
+
+
+def forest_trunks():
+    w, h = 720, 256
+    rng = random.Random(130)
+    c = Canvas(w, h)
+    # Canopy overhead: overlapping clumps of leaves whose lumpy lower edge sits just above the
+    # screen until the camera climbs.
+    edge = fbm(rng, w, 3, 8)
+    for x in range(w):
+        for y in range(222, h):
+            c.set(x, y, LEAVES[0])
+    clumps = []
+    x = 0
+    while x < w:
+        r = rng.randint(7, 15)
+        clumps.append((x, round(212 + edge(x) * 12) - r // 2, r))
+        x += rng.randint(5, 11)
+    for cx, cy, r in sorted(clumps, key=lambda k: -k[1]):
+        for y in range(cy - r, cy + r + 1):
+            for x in range(cx - r, cx + r + 1):
+                d = math.hypot(x - cx, (y - cy) * 1.2) / r
+                if d <= 1:
+                    lower_left = (x - cx) - (y - cy) * 1.2
+                    col = LEAVES[2] if d > 0.75 and lower_left < -r * 0.4 else LEAVES[1] if hash2(x // 2, y // 2) > 0.55 else LEAVES[0]
+                    c.set(x, y, col)
+        if rng.random() < 0.35:  # hanging vine
+            vx = cx + rng.randint(-r // 2, r // 2)
+            for dy in range(rng.randint(8, 36)):
+                c.set(vx, cy - r // 2 - dy, (20, 30, 22) if dy % 5 == 0 else (12, 18, 15))
+    x = rng.randint(20, 60)
+    first = True
+    while x < w - 30:
+        width = rng.randint(20, 40)
+        big_trunk(c, x, width, h - 30, BARK, rng, hollow=first)
+        first = False
+        x += width + rng.randint(70, 150)
+    c.save("Forest_Trunks.png")
+
+
+def forest_ground():
+    w, h = 480, 112
+    rng = random.Random(140)
+    ground = fbm(rng, w, 3, 6)
+    soil = [(5, 6, 7), (8, 9, 10), (12, 13, 14), (18, 20, 19), (26, 30, 26)]
+    moss = [(22, 32, 22), (30, 44, 30)]
+    c = Canvas(w, h)
+
+    def gh(x):
+        return round(12 + ground(x) * 4)
+
+    for x in range(w):
+        top = gh(x)
+        for y in range(top + 1):
+            c.set(x, y, moss[1] if y == top and hash2(x, 3) > 0.5 else moss[0] if y == top else soil[1] if top - y < 4 else soil[0])
+
+    # Roots snaking along the surface.
+    for _ in range(14):
+        x, y = rng.randrange(w), 0
+        y = gh(x) + 1
+        direction = rng.choice((-1, 1))
+        for i in range(rng.randint(10, 30)):
+            x += direction
+            y += rng.choice((0, 0, 1, -1)) if y > gh(x) else 1
+            c.set(x, y, BARK[2])
+            c.set(x, y - 1, BARK[1])
+
+    # Ferns.
+    for _ in range(40):
+        x0 = rng.randrange(w)
+        y0 = gh(x0)
+        for side in (-1, 1):
+            for frond in range(2):
+                angle = math.pi / 2 - side * (0.5 + frond * 0.5)
+                x, y = float(x0), float(y0)
+                for i in range(rng.randint(5, 11)):
+                    x += math.cos(angle)
+                    y += math.sin(angle)
+                    angle -= side * 0.12
+                    c.set(round(x), round(y), LEAVES[3] if i % 2 else LEAVES[2])
+
+    # Crooked gravestones.
+    stone = [(18, 18, 22), (30, 30, 36), (44, 44, 52)]
+    for _ in range(3):
+        x0 = rng.randrange(w)
+        y0 = gh(x0) - 2
+        tilt = rng.uniform(-0.25, 0.25)
+        for y in range(16):
+            for dx in range(-5, 6):
+                if y > 12 and dx * dx + (y - 12) ** 2 > 30:
+                    continue  # rounded top
+                col = stone[2] if dx < -3 else stone[1] if dx < 4 else stone[0]
+                if dx == -1 and 7 < y < 12 or y == 10 and -3 < dx < 2:
+                    col = stone[0]  # carved cross
+                c.set(round(x0 + dx + tilt * y), y0 + y, col)
+        for dx in range(-5, 6):
+            c.set(round(x0 + dx + tilt * 2), y0 + 2, moss[0])
+
+    # Glowing mushrooms.
+    for _ in range(9):
+        cx = rng.randrange(w)
+        for _ in range(rng.randint(2, 5)):
+            x0 = cx + rng.randint(-6, 6)
+            y0 = gh(x0) + 1
+            stem = rng.randint(2, 5)
+            for y in range(stem):
+                c.set(x0, y0 + y, (150, 170, 160))
+            r = rng.randint(1, 2)
+            for dx in range(-r, r + 1):
+                c.set(x0 + dx, y0 + stem, GLOW[0])
+                if abs(dx) < r:
+                    c.set(x0 + dx, y0 + stem + 1, GLOW[1])
+            for dy in range(-2, 5):
+                for dx in range(-r - 2, r + 3):
+                    if not c.get(x0 + dx, y0 + stem + dy)[3] and dither(x0 + dx, y0 + stem + dy, 0.35):
+                        c.set(x0 + dx, y0 + stem + dy, (*GLOW[1], 60))
+
+    for x in (rng.randrange(w) for _ in range(4)):
+        dead_tree(c, x, gh(x), rng.randint(18, 30), BARK[1], rng)
+
+    # Fog wisps drifting along the ground.
+    wisp = fbm(rng, w, 3, 6)
+    for x in range(w):
+        for y in range(gh(x) - 2, gh(x) + 18):
+            n = wisp(x + y * 4) - abs(y - gh(x) - 6) / 14
+            if n > 0.05 and dither(x, y, min(1.0, n * 1.5)):
+                p = c.get(x, y)
+                c.set(x, y, mix(p[:3], FOG, 0.35) if p[3] == 255 else (*FOG, 110))
+    c.save("Forest_Ground.png")
+
+
+def fade():
+    """Solid white square, tinted by BiomeBackdrop into the fog bank between biomes."""
+    c = Canvas(4, 4)
+    for y in range(4):
+        for x in range(4):
+            c.set(x, y, (255, 255, 255))
+    c.save("Backdrop_Fade.png")
+
+
 if __name__ == "__main__":
     sky()
     moon()
@@ -446,3 +778,10 @@ if __name__ == "__main__":
     main_range()
     hills()
     near_forest()
+    forest_sky()
+    forest_moon()
+    forest_far()
+    forest_mid()
+    forest_trunks()
+    forest_ground()
+    fade()

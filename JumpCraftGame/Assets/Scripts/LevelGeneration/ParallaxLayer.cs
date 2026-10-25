@@ -2,7 +2,7 @@ using UnityEngine;
 
 // Moves a background sprite by a fraction of the camera's movement so it looks far away, and
 // repeats it left and right so the backdrop never runs out on an infinite level.
-// Runs after CameraFollow so it always uses this frame's camera position.
+// Runs after CameraFollow and BiomeBackdrop so it always uses this frame's camera position and zoom.
 [DefaultExecutionOrder(100)]
 [RequireComponent(typeof(SpriteRenderer))]
 public class ParallaxLayer : MonoBehaviour
@@ -15,9 +15,15 @@ public class ParallaxLayer : MonoBehaviour
     //Tile the sprite sideways forever. Turn off for single objects like the moon.
     public bool repeat = true;
 
+    //Set by BiomeBackdrop. Scales the layer up around zoomAnchor (a point on screen, relative to the camera's center) as if walking toward it.
+    [HideInInspector] public float zoom = 1f;
+    public Vector2 zoomAnchor = new Vector2(0f, -5.5f);
+
     private Vector3 startPosition;
     private Vector3 cameraStart;
     private float tileWidth;
+    private SpriteRenderer[] renderers;
+    private bool visible = true;
 
     void Start()
     {
@@ -36,6 +42,10 @@ public class ParallaxLayer : MonoBehaviour
             AddTile(sprite, -tileWidth);
             AddTile(sprite, tileWidth);
         }
+
+        renderers = GetComponentsInChildren<SpriteRenderer>();
+        foreach (SpriteRenderer r in renderers)
+            r.enabled = visible;
     }
 
     void LateUpdate()
@@ -49,7 +59,25 @@ public class ParallaxLayer : MonoBehaviour
         if (repeat)
             x += Mathf.Round((cameraPosition.x - x) / tileWidth) * tileWidth;
 
-        transform.position = new Vector3(x, y, startPosition.z);
+        //Zoom around a fixed point on screen: the layer's offset from that point grows along with its size.
+        Vector2 offset = new Vector2(x - cameraPosition.x, y - cameraPosition.y);
+        offset = zoomAnchor + (offset - zoomAnchor) * zoom;
+
+        transform.position = new Vector3(cameraPosition.x + offset.x, cameraPosition.y + offset.y, startPosition.z);
+        transform.localScale = new Vector3(zoom, zoom, 1f);
+    }
+
+    //Hides the layer (and its copies) without stopping it from following the camera.
+    public void SetVisible(bool value)
+    {
+        if (value == visible)
+            return;
+
+        visible = value;
+        if (renderers == null)
+            return;
+        foreach (SpriteRenderer r in renderers)
+            r.enabled = value;
     }
 
     void AddTile(SpriteRenderer original, float offsetX)
