@@ -19,6 +19,7 @@ public class HUDManager : MonoBehaviour
     public GameObject item1WorldPrefab;
     public GameObject item2WorldPrefab;
     public bool BoneCollected => item1Count > 0;
+    public bool recipeUnlocked = false;
 
     // SCALABLE DICTIONARY: Tracks count for ANY item ID automatically!
     private Dictionary<string, int> itemCounts = new Dictionary<string, int>();
@@ -47,10 +48,11 @@ public class HUDManager : MonoBehaviour
         SetItemCount(cleanID, current + amount);
 
         // Trigger notifications with custom text based on what was picked up
-        if (cleanID == "bone")
+        if (cleanID == "bone" && recipeUnlocked == false)
         {
             if (ItemNotificationPopup.Instance != null)
                 ItemNotificationPopup.Instance.TriggerPopup("Recipe Book Updated!");
+            recipeUnlocked = true;
         }
         else if (cleanID == "skullkey")
         {
