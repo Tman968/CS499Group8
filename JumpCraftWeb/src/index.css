@@ -1,0 +1,16 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family: Arial, sans-serif;
+  background-color: white;
+  color: #222;
+}
+
+#root {
+  min-height: 100vh;
+}
