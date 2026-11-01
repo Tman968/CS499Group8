@@ -1762,6 +1762,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpriteSwitcher
   defaultSprite: {fileID: 21300000, guid: 2ed4f52781a2dd94b968017fa629ee89, type: 3}
   craftedSprite: {fileID: 21300000, guid: 674b11e45c9447542b56e17a278133ac, type: 3}
+  defaultHeldWeapon: {fileID: 21300000, guid: e1537b7d528efeb7dae6a565a06a9238, type: 3}
+  craftedHeldWeapon: {fileID: 21300000, guid: d1917b9b62c1ca70c9207d73764896c5, type: 3}
   _isUnlocked: 0
   _isToggledOn: 0
 --- !u!114 &496630157
@@ -7416,23 +7418,42 @@ MonoBehaviour:
   m_GameObject: {fileID: 2008131723}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: faf5e3753c5341ef9039add7d0be341b, type: 3}
+  m_Script: {fileID: 11500000, guid: 75d744108c5a6779a165e39a5d3fbda7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimator
-  sprite: {fileID: 2008131726}
+  m_EditorClassIdentifier: Assembly-CSharp::WizardAnimator
+  body: {fileID: 2008131726}
   artFacesRight: 1
   pixelSnap: 1
-  idlePeriod: 1.6
+  idleFrames: {fileID: 2800000, guid: b66e215b7f3e960c90e48f23a7e8e0db, type: 3}
+  runFrames: {fileID: 2800000, guid: 23a7f386c34f50d62b008fa263ff6f8f, type: 3}
+  riseFrames: {fileID: 2800000, guid: e2e2b10ed1d78a54b668af9675027473, type: 3}
+  glideFrames: {fileID: 2800000, guid: 1af1d93f3a09d9000ddf3e199f61b866, type: 3}
+  castFrames: {fileID: 2800000, guid: 281ede94a6ced0b70afd65edb33e3d19, type: 3}
+  frameWidth: 44
+  pixelsPerUnit: 16
+  weapon: {fileID: 21300000, guid: e1537b7d528efeb7dae6a565a06a9238, type: 3}
+  hand: {fileID: 21300000, guid: 0bc57a576cc98cf65290db5ea76c865e, type: 3}
+  gripPixel: {x: 33.5, y: 30.5}
+  idlePeriod: 2.2
   idleBreathPixels: 1
-  idleSwayPixels: 0
-  walkSpeedThreshold: 0.1
-  stepsPerUnit: 0.5
-  walkBobPixels: 2
-  walkSquash: 0.05
-  walkLeanDegrees: 4
+  runSpeedThreshold: 0.1
+  stridesPerUnit: 0.25
+  runWeaponSwing: 4
   airborneSpeedThreshold: 0.2
-  airStretch: 0.06
-  blendSpeed: 8
+  riseSpeedThreshold: 1
+  riseFps: 12
+  glideFps: 9
+  airStretch: 0.03
+  glideWeaponSway: 5
+  castFrameSeconds:
+  - 0.09
+  - 0.06
+  - 0.06
+  - 0.16
+  - 0.14
+  - 0.14
+  - 0.09
+  - 0.07
 --- !u!1 &2008131731
 GameObject:
   m_ObjectHideFlags: 0

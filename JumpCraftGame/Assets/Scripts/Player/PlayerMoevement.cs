@@ -2,6 +2,7 @@ using UnityEngine;
 // Required if you ever use advanced Input System features, 
 // though using Key.current works directly with Keyboard.current
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class PlayerMovement : MonoBehaviour
     public float jumpForce = 12f;
 
     private Rigidbody2D rb;
+    private WizardAnimator wizard;
     private bool isGrounded = true;
 
     //Read by CameraFollow to track the height of the ground the player is standing on.
@@ -18,6 +20,7 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        wizard = GetComponent<WizardAnimator>();
     }
 
     void Update()
@@ -40,7 +43,15 @@ public class PlayerMovement : MonoBehaviour
             isGrounded = false; // Prevent mid-air jumping
         }
 
-        // 3. Death check (falling below y = -8): Moves player back to main menu (death screen can be implemented later, or have a revive system with multiplayer?)
+        // 3. Wand attack (Space, or left click when not clicking on the HUD). Animation only for now.
+        bool clickedWorld = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame &&
+            (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
+        if ((Keyboard.current.spaceKey.wasPressedThisFrame || clickedWorld) && wizard != null)
+        {
+            wizard.Cast();
+        }
+
+        // 4. Death check (falling below y = -8): Moves player back to main menu (death screen can be implemented later, or have a revive system with multiplayer?)
         if (transform.position.y <= -8)
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene("GameMenu");

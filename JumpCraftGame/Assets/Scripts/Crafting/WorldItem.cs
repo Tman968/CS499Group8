@@ -10,6 +10,9 @@ public class WorldItem : MonoBehaviour
     [Header("Origin Tracking")]
     public bool droppedByPlayer = false;
 
+    // Set when a recipe uses this item up, so it can't be crafted with again before it's destroyed
+    [HideInInspector] public bool consumed = false;
+
     private void Start()
     {
         // Give the item a tiny moment to settle on the ground, then check for recipes

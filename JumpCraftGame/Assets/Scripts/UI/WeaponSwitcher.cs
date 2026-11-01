@@ -12,6 +12,13 @@ public class SpriteSwitcher : MonoBehaviour
     [Tooltip("The crafted / active option sprite")]
     public Sprite craftedSprite;
 
+    [Header("Held Weapon")]
+    [Tooltip("What the wizard holds while the default option is showing")]
+    public Sprite defaultHeldWeapon;
+
+    [Tooltip("What the wizard holds while the crafted option is showing")]
+    public Sprite craftedHeldWeapon;
+
     [Header("State Tracking")]
     [SerializeField] private bool _isUnlocked = false;    // False until picked up
     [SerializeField] private bool _isToggledOn = false;    // True when showing the crafted state
@@ -22,6 +29,7 @@ public class SpriteSwitcher : MonoBehaviour
     public bool IsDefaultImage => !_isToggledOn;
 
     private Image uiImage;
+    private WizardAnimator wizard;
 
     private void Awake()
     {
@@ -37,6 +45,12 @@ public class SpriteSwitcher : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        wizard = FindFirstObjectByType<WizardAnimator>();
+        UpdateHeldWeapon();
+    }
+
     // Called automatically when the SkullWand is picked up
     public void UnlockAndActivate()
     {
@@ -50,6 +64,7 @@ public class SpriteSwitcher : MonoBehaviour
             uiImage.sprite = craftedSprite;
             Debug.Log("SkullWand weapon sprite unlocked and activated!");
         }
+        UpdateHeldWeapon();
     }
 
     // Attach this method to the UI Button's OnClick event for toggling it afterward
@@ -65,6 +80,17 @@ public class SpriteSwitcher : MonoBehaviour
         if (uiImage != null)
         {
             uiImage.sprite = _isToggledOn ? craftedSprite : defaultSprite;
+        }
+        UpdateHeldWeapon();
+    }
+
+    // Puts the weapon matching the current option in the wizard's hand
+    private void UpdateHeldWeapon()
+    {
+        Sprite held = _isToggledOn ? craftedHeldWeapon : defaultHeldWeapon;
+        if (wizard != null && held != null)
+        {
+            wizard.SetWeapon(held);
         }
     }
 }

@@ -68,6 +68,10 @@ public class HUDManager : MonoBehaviour
         {
             if (ItemNotificationPopup.Instance != null)
                 ItemNotificationPopup.Instance.TriggerPopup("Weapon Updated!");
+
+            // Equip the new weapon and let the change weapon button toggle it
+            if (SpriteSwitcher.Instance != null)
+                SpriteSwitcher.Instance.UnlockAndActivate();
         }
 
         UpdateUI();
