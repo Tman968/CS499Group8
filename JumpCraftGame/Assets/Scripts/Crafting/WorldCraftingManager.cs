@@ -20,7 +20,7 @@ public class WorldCraftingManager : MonoBehaviour
 
     public void TryCraft(WorldItem triggeringItem)
     {
-        if (triggeringItem == null || !triggeringItem.droppedByPlayer) return;
+        if (triggeringItem == null || !triggeringItem.droppedByPlayer || triggeringItem.consumed) return;
 
         // Gather all world items within a radius of the triggering item
         Collider2D[] hits = Physics2D.OverlapCircleAll(triggeringItem.transform.position, checkRadius);
@@ -31,7 +31,7 @@ public class WorldCraftingManager : MonoBehaviour
             if (hit != null)
             {
                 WorldItem wi = hit.GetComponent<WorldItem>();
-                if (wi != null && wi.droppedByPlayer)
+                if (wi != null && wi.droppedByPlayer && !wi.consumed)
                 {
                     nearbyItems.Add(wi);
                 }
@@ -87,11 +87,13 @@ public class WorldCraftingManager : MonoBehaviour
             if (id == req1 && needed1 > 0)
             {
                 needed1--;
+                item.consumed = true;
                 Destroy(item.gameObject);
             }
             else if (!string.IsNullOrEmpty(req2) && id == req2 && needed2 > 0)
             {
                 needed2--;
+                item.consumed = true;
                 Destroy(item.gameObject);
             }
 
