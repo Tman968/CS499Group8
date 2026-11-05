@@ -2,6 +2,7 @@ using UnityEngine;
 // Required if you ever use advanced Input System features, 
 // though using Key.current works directly with Keyboard.current
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -10,11 +11,16 @@ public class PlayerMovement : MonoBehaviour
     public float jumpForce = 12f;
 
     private Rigidbody2D rb;
+    private WizardAnimator wizard;
     private bool isGrounded = true;
+
+    //Read by CameraFollow to track the height of the ground the player is standing on.
+    public bool IsGrounded => isGrounded;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        wizard = GetComponent<WizardAnimator>();
     }
 
     void Update()
@@ -36,11 +42,34 @@ public class PlayerMovement : MonoBehaviour
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             isGrounded = false; // Prevent mid-air jumping
         }
+
+        // 3. Wand attack (Space, or left click when not clicking on the HUD). Animation only for now.
+        bool clickedWorld = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame &&
+            (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
+        if ((Keyboard.current.spaceKey.wasPressedThisFrame || clickedWorld) && wizard != null)
+        {
+            wizard.Cast();
+        }
+
+        // 4. Death check (falling below y = -8): Moves player back to main menu (death screen can be implemented later, or have a revive system with multiplayer?)
+        if (transform.position.y <= -8)
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("GameMenu");
+        }
+        
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // Resets grounded status when landing on a collider
-        isGrounded = true;
+        //Checks the contact between the player and the platform
+        //Prevents jumping on side and bottom of platforms
+        foreach (ContactPoint2D contact in collision.contacts)
+        {
+            if (contact.normal.y > 0.5f) //Creates a normal vector based on the y direction of the contact (on top of a platform is positive)
+            {
+                isGrounded = true;
+                break;
+            }
+        }
     }
 }

@@ -1,0 +1,600 @@
+fileFormatVersion: 2
+guid: f1a5e78aac4d6074186d4826d8351070
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3180506660300218491
+    second: Platforms Start and Portal_0
+  - first:
+      213: 28975698885095951
+    second: Platforms Start and Portal_1
+  - first:
+      213: 3224655070431843264
+    second: Platforms Start and Portal_2
+  - first:
+      213: 5437713445663980725
+    second: Platforms Start and Portal_3
+  - first:
+      213: 2244933767230003226
+    second: Platforms Start and Portal_4
+  - first:
+      213: 2935114012123436724
+    second: Platforms Start and Portal_5
+  - first:
+      213: 6908839973056483622
+    second: Platforms Start and Portal_6
+  - first:
+      213: -5440019513333414357
+    second: Platforms Start and Portal_7
+  - first:
+      213: 3902585624573662625
+    second: Platforms Start and Portal_8
+  - first:
+      213: 3274864587162656321
+    second: Platforms Start and Portal_9
+  - first:
+      213: 7479373396926053832
+    second: Platforms Start and Portal_10
+  - first:
+      213: 1780908801716128591
+    second: Platforms Start and Portal_11
+  - first:
+      213: -1891097115777762998
+    second: Platforms Start and Portal_12
+  - first:
+      213: 3458115188963117161
+    second: Platforms Start and Portal_13
+  - first:
+      213: -1904251812930345232
+    second: Platforms Start and Portal_14
+  - first:
+      213: 7682559985723192144
+    second: Platforms Start and Portal_15
+  - first:
+      213: 2218690317893730818
+    second: Platforms Start and Portal_16
+  - first:
+      213: -5139764970524141582
+    second: Platforms Start and Portal_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Platforms Start and Portal_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1015
+        height: 686
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7065fcd4fd632c20800000000000000
+      internalID: 3180506660300218491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_1
+      rect:
+        serializedVersion: 2
+        x: 936
+        y: 686
+        width: 261
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f023a2f9e31f66000800000000000000
+      internalID: 28975698885095951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_2
+      rect:
+        serializedVersion: 2
+        x: 1016
+        y: 0
+        width: 1133
+        height: 711
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c3904c93b640cc20800000000000000
+      internalID: 3224655070431843264
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_3
+      rect:
+        serializedVersion: 2
+        x: 1322
+        y: 680
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5bcba2f8193a67b40800000000000000
+      internalID: 5437713445663980725
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_4
+      rect:
+        serializedVersion: 2
+        x: 1537
+        y: 704
+        width: 89
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a18160cfd5b972f10800000000000000
+      internalID: 2244933767230003226
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_5
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 257
+        width: 46
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b693e3a4ae9bb820800000000000000
+      internalID: 2935114012123436724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_6
+      rect:
+        serializedVersion: 2
+        x: 1104
+        y: 262
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6211d04d95121ef50800000000000000
+      internalID: 6908839973056483622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_7
+      rect:
+        serializedVersion: 2
+        x: 1018
+        y: 169
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b268198331b2184b0800000000000000
+      internalID: -5440019513333414357
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_8
+      rect:
+        serializedVersion: 2
+        x: 306
+        y: 84
+        width: 131
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a55242e2f4c82630800000000000000
+      internalID: 3902585624573662625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_9
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 82
+        width: 9
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14e1655bdf7a27d20800000000000000
+      internalID: 3274864587162656321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_10
+      rect:
+        serializedVersion: 2
+        x: 737
+        y: 94
+        width: 23
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cdb8422a721cc760800000000000000
+      internalID: 7479373396926053832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_11
+      rect:
+        serializedVersion: 2
+        x: 803
+        y: 96
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4b08a79e1f07b810800000000000000
+      internalID: 1780908801716128591
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_12
+      rect:
+        serializedVersion: 2
+        x: 808
+        y: 98
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a49fc42513971c5e0800000000000000
+      internalID: -1891097115777762998
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_13
+      rect:
+        serializedVersion: 2
+        x: 846
+        y: 76
+        width: 25
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96887864171bdff20800000000000000
+      internalID: 3458115188963117161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_14
+      rect:
+        serializedVersion: 2
+        x: 246
+        y: 80
+        width: 14
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f6a467b01db295e0800000000000000
+      internalID: -1904251812930345232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_15
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 80
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05339a26a9fed9a60800000000000000
+      internalID: 7682559985723192144
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_16
+      rect:
+        serializedVersion: 2
+        x: 1465
+        y: 82
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20287a8c61f5ace10800000000000000
+      internalID: 2218690317893730818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Platforms Start and Portal_17
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 65
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f799eeadf2eba8b0800000000000000
+      internalID: -5139764970524141582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Platforms Start and Portal_0: 3180506660300218491
+      Platforms Start and Portal_1: 28975698885095951
+      Platforms Start and Portal_10: 7479373396926053832
+      Platforms Start and Portal_11: 1780908801716128591
+      Platforms Start and Portal_12: -1891097115777762998
+      Platforms Start and Portal_13: 3458115188963117161
+      Platforms Start and Portal_14: -1904251812930345232
+      Platforms Start and Portal_15: 7682559985723192144
+      Platforms Start and Portal_16: 2218690317893730818
+      Platforms Start and Portal_17: -5139764970524141582
+      Platforms Start and Portal_2: 3224655070431843264
+      Platforms Start and Portal_3: 5437713445663980725
+      Platforms Start and Portal_4: 2244933767230003226
+      Platforms Start and Portal_5: 2935114012123436724
+      Platforms Start and Portal_6: 6908839973056483622
+      Platforms Start and Portal_7: -5440019513333414357
+      Platforms Start and Portal_8: 3902585624573662625
+      Platforms Start and Portal_9: 3274864587162656321
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

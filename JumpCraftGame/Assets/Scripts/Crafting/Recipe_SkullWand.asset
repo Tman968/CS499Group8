@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 518639e3341c67e40ad04e301468da08, type: 3}
+  m_Name: Recipe_SkullWand
+  m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
+  ingredient1ID: skeletonitembone
+  requiredAmount1: 1
+  ingredient2ID: skeletonitemskull
+  requiredAmount2: 1
+  resultPrefab: {fileID: 8646124586907638447, guid: 35fe774a410bc28488a8d149a4ed45bd, type: 3}

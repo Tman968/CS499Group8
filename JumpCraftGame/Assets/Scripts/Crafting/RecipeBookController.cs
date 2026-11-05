@@ -7,6 +7,10 @@ public class RecipeBookController : MonoBehaviour
     public RectTransform menuPanel; // Drag your SlidingMenu here
     public Button toggleButton;   // Drag your MenuButton here
 
+    [Header("Book Unlock Settings")]
+    [Tooltip("Drag the specific recipe or item panel inside your book that should appear when Item 1 is picked up")]
+    public GameObject recipeUnlockPanel;
+
     [Header("Slide Settings")]
     public float slideSpeed = 10f; // How fast it slides
     private bool isOpen = false;
@@ -35,6 +39,12 @@ public class RecipeBookController : MonoBehaviour
         {
             toggleButton.onClick.AddListener(ToggleMenu);
         }
+
+        // Make sure the unlock panel starts hidden when the game begins
+        if (recipeUnlockPanel != null)
+        {
+            recipeUnlockPanel.SetActive(false);
+        }
     }
 
     void Update()
@@ -48,11 +58,27 @@ public class RecipeBookController : MonoBehaviour
                 slideSpeed * Time.unscaledDeltaTime
             );
         }
+
+        // Continuously check if Item 1 has been collected to reveal the book panel
+        CheckForUnlock();
     }
 
     public void ToggleMenu()
     {
         isOpen = !isOpen;
         targetPosition = isOpen ? shownPosition : hiddenPosition;
+    }
+
+    private void CheckForUnlock()
+    {
+        if (recipeUnlockPanel != null && HUDManager.Instance != null)
+        {
+            // If Item 1 is picked up and the panel isn't active yet, turn it on!
+            if (HUDManager.Instance.BoneCollected && !recipeUnlockPanel.activeSelf)
+            {
+                recipeUnlockPanel.SetActive(true);
+                Debug.Log("Item 1 collected! Unlocking recipe panel inside the book.");
+            }
+        }
     }
 }
