@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -82,8 +83,19 @@ public class WizardAnimator : MonoBehaviour
     [Header("Cast")]
     [Tooltip("Seconds each cast frame is shown: brace, raise, thrust, three holds, recover, settle.")]
     public float[] castFrameSeconds = { 0.09f, 0.06f, 0.06f, 0.16f, 0.14f, 0.14f, 0.09f, 0.07f };
+    [Tooltip("Index of the cast frame where the spell leaves the weapon (the thrust).")]
+    public int castReleaseFrame = 2;
+    [Tooltip("How far up the weapon from the grip the spell leaves it, in art pixels.")]
+    public float weaponTipPixels = 20f;
+    [Tooltip("How far the weapon can point, in degrees from straight up (negative is forward).")]
+    public Vector2 aimAngleRange = new(-140f, 20f);
+
+    [Header("Hurt")]
+    public Color hurtColor = new(1f, 0.35f, 0.35f, 1f);
+    public float hurtFlashSeconds = 0.5f;
 
     public bool IsCasting => castTime >= 0f;
+    public bool FacingRight => facingRight;
 
     private Rigidbody2D rb;
     private Sprite[] idle, run, rise, glide, cast;
@@ -96,6 +108,10 @@ public class WizardAnimator : MonoBehaviour
     private float airTime;
     private float castTime = -1f;
     private float airWeight;
+    private Vector2 castTarget;
+    private Action<Vector3, Vector2> onCastRelease;
+    private bool castReleased;
+    private float hurtTimer;
 
     void Awake()
     {
@@ -124,7 +140,7 @@ public class WizardAnimator : MonoBehaviour
         handRenderer.sprite = hand;
 
         facingRight = artFacesRight;
-        idlePhase = Random.value;
+        idlePhase = UnityEngine.Random.value;
     }
 
     /// <summary>Puts a different weapon in the wizard's hand.</summary>
@@ -134,11 +150,25 @@ public class WizardAnimator : MonoBehaviour
         if (weaponRenderer != null) weaponRenderer.sprite = newWeapon;
     }
 
-    /// <summary>Raises the weapon forward in a cast. Ignored while a cast is already playing.</summary>
-    public void Cast()
+    /// <summary>
+    /// Turns toward target (world space) and thrusts the weapon at it. onRelease runs on the thrust
+    /// frame with the weapon's tip and the target. Returns false while the previous cast is still
+    /// winding up, so casts can't be spammed faster than the animation.
+    /// </summary>
+    public bool Cast(Vector2 target, Action<Vector3, Vector2> onRelease)
     {
-        if (enabled && !IsCasting && cast.Length > 0) castTime = 0f;
+        if (!enabled || cast.Length == 0) return false;
+        if (IsCasting && CurrentCastFrame() < castReleaseFrame + 2) return false;
+        castTime = 0f;
+        castTarget = target;
+        onCastRelease = onRelease;
+        castReleased = false;
+        facingRight = target.x > transform.position.x;
+        return true;
     }
+
+    /// <summary>Flickers the wizard red for a moment, after he takes a hit.</summary>
+    public void Flash() => hurtTimer = hurtFlashSeconds;
 
     void LateUpdate()
     {
@@ -148,8 +178,8 @@ public class WizardAnimator : MonoBehaviour
         var airborne = Mathf.Abs(velocity.y) > airborneSpeedThreshold;
         var running = !airborne && speed > runSpeedThreshold;
 
-        // Keep facing the last direction moved in when stopping.
-        if (speed > runSpeedThreshold) facingRight = velocity.x > 0f;
+        // Keep facing the last direction moved in when stopping. While casting, face the target.
+        if (speed > runSpeedThreshold && !IsCasting) facingRight = velocity.x > 0f;
 
         airWeight = Mathf.MoveTowards(airWeight, airborne ? 1f : 0f, 8f * dt);
         airTime = airborne ? airTime + dt : 0f;
@@ -168,6 +198,10 @@ public class WizardAnimator : MonoBehaviour
             frame = cast[castFrame];
             handPx = CastHands[Mathf.Min(castFrame, CastHands.Length - 1)];
             angle = CastAngles[Mathf.Min(castFrame, CastAngles.Length - 1)];
+            // Point the weapon at the target from the thrust until the recovery.
+            var aim = AimAngle();
+            if (castFrame == castReleaseFrame - 1 || castFrame == castReleaseFrame + 4) angle = Mathf.Lerp(angle, aim, 0.5f);
+            else if (castFrame >= castReleaseFrame && castFrame < castReleaseFrame + 4) angle = aim;
         }
         else if (airborne && velocity.y > riseSpeedThreshold && rise.Length > 0)
         {
@@ -215,6 +249,42 @@ public class WizardAnimator : MonoBehaviour
         grip.localPosition = FramePixelToLocal(handPx, frame);
         grip.localRotation = Quaternion.Euler(0f, 0f, angle);
         weaponRenderer.sortingLayerID = handRenderer.sortingLayerID = body.sortingLayerID;
+
+        if (castFrame >= castReleaseFrame && !castReleased)
+        {
+            castReleased = true;
+            onCastRelease?.Invoke(WeaponTip(), castTarget);
+        }
+
+        hurtTimer -= dt;
+        // Flicker between the hurt tint and normal while the flash lasts.
+        var tint = hurtTimer > 0f && (int)(hurtTimer * 16f) % 2 == 0 ? hurtColor : Color.white;
+        body.color = weaponRenderer.color = handRenderer.color = tint;
+    }
+
+    /// <summary>Where spells leave the weapon, in world space.</summary>
+    public Vector3 WeaponTip() => grip.TransformPoint(new Vector3(0f, weaponTipPixels / pixelsPerUnit, 0f));
+
+    // The weapon angle that points it from the grip at the cast target, for art facing right.
+    float AimAngle()
+    {
+        var mirror = facingRight == artFacesRight ? 1f : -1f;
+        var to = castTarget - (Vector2)grip.position;
+        var forward = to.x * mirror * (artFacesRight ? 1f : -1f);
+        var angle = Mathf.Atan2(-forward, to.y) * Mathf.Rad2Deg;
+        return Mathf.Clamp(angle, aimAngleRange.x, aimAngleRange.y);
+    }
+
+    int CurrentCastFrame()
+    {
+        var t = castTime;
+        for (var i = 0; i < cast.Length; i++)
+        {
+            var seconds = i < castFrameSeconds.Length ? castFrameSeconds[i] : 0.08f;
+            if (t < seconds) return i;
+            t -= seconds;
+        }
+        return cast.Length;
     }
 
     // Steps the cast timer and returns the cast frame to show, or -1 when not casting.
