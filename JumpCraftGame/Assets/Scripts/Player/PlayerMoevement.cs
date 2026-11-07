@@ -3,6 +3,8 @@ using UnityEngine;
 // though using Key.current works directly with Keyboard.current
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -17,6 +19,23 @@ public class PlayerMovement : MonoBehaviour
     //Read by CameraFollow to track the height of the ground the player is standing on.
     public bool IsGrounded => isGrounded;
 
+    [Header("Controls Setup")]
+    [Tooltip("Check this box on Player 2's script component so they use Arrow Keys instead of WASD")]
+    public bool useArrowKeys = false;
+
+    // Static list to keep track of all active players in the scene
+    private static List<PlayerMovement> activePlayers = new List<PlayerMovement>();
+
+    private void OnEnable()
+    {
+        if (!activePlayers.Contains(this))
+            activePlayers.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        activePlayers.Remove(this);
+    }
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -28,16 +47,30 @@ public class PlayerMovement : MonoBehaviour
         // Make sure a keyboard is connected
         if (Keyboard.current == null) return;
 
-        // 1. Left and Right Movement (A and D keys)
+        // 1. Horizontal Movement Check (WASD vs Arrow Keys)
         float moveInput = 0f;
-        if (Keyboard.current.aKey.isPressed) moveInput = -1f; // Move left
-        if (Keyboard.current.dKey.isPressed) moveInput = 1f;  // Move right
+
+        if (useArrowKeys)
+        {
+            // Player 2: Left and Right Arrow Keys
+            if (Keyboard.current.leftArrowKey.isPressed) moveInput = -1f;
+            if (Keyboard.current.rightArrowKey.isPressed) moveInput = 1f;
+        }
+        else
+        {
+            // Player 1: A and D Keys
+            if (Keyboard.current.aKey.isPressed) moveInput = -1f;
+            if (Keyboard.current.dKey.isPressed) moveInput = 1f;
+        }
 
         // Apply horizontal velocity while keeping current vertical velocity
         rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
 
-        // 2. Jumping (W key)
-        if (Keyboard.current.wKey.wasPressedThisFrame && isGrounded)
+        // 2. Jumping Check (W key for Player 1, Up Arrow for Player 2)
+        bool jumpPressed = useArrowKeys ? Keyboard.current.upArrowKey.wasPressedThisFrame
+                                        : Keyboard.current.wKey.wasPressedThisFrame;
+
+        if (jumpPressed && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             isGrounded = false; // Prevent mid-air jumping
@@ -46,17 +79,32 @@ public class PlayerMovement : MonoBehaviour
         // 3. Wand attack (Space, or left click when not clicking on the HUD). Animation only for now.
         bool clickedWorld = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame &&
             (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
+
         if ((Keyboard.current.spaceKey.wasPressedThisFrame || clickedWorld) && wizard != null)
         {
             wizard.Cast();
         }
 
-        // 4. Death check (falling below y = -8): Moves player back to main menu (death screen can be implemented later, or have a revive system with multiplayer?)
+        // 4. Death check (falling below y = -8)
         if (transform.position.y <= -8)
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("GameMenu");
+            bool allPlayersDead = true;
+
+            foreach (var player in activePlayers)
+            {
+                // If any player is still alive (above or at y > -8), then not everyone is dead yet
+                if (player != null && player.transform.position.y > -8)
+                {
+                    allPlayersDead = false;
+                    break;
+                }
+            }
+
+            if (allPlayersDead)
+            {
+                SceneManager.LoadScene("GameMenu");
+            }
         }
-        
     }
 
     void OnCollisionEnter2D(Collision2D collision)

@@ -24,7 +24,12 @@ public class Skeleton : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
+        if (collision.gameObject.CompareTag("Player1"))
+        {
+            DieAndDropItems();
+        }
+
+        if (collision.gameObject.CompareTag("Player2"))
         {
             DieAndDropItems();
         }
