@@ -2080,7 +2080,7 @@ MonoBehaviour:
   firstForestX: 100
   forestLength: 150
   mountainLength: 200
-  transitionLength: 30
+  transitionLength: 60
 --- !u!4 &661759603
 Transform:
   m_ObjectHideFlags: 0
@@ -4497,23 +4497,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 1216060630}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: faf5e3753c5341ef9039add7d0be341b, type: 3}
+  m_Script: {fileID: 11500000, guid: b6b11c853460c7da51b4abefd7af5951, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimator
-  sprite: {fileID: 1216060633}
+  m_EditorClassIdentifier: Assembly-CSharp::SkeletonAnimator
+  body: {fileID: 1216060633}
   artFacesRight: 1
-  pixelSnap: 1
+  idleFrames: {fileID: 2800000, guid: 064954987c860a8e6a6729d1356adff6, type: 3}
+  walkFrames: {fileID: 2800000, guid: 136505fd782939b380b3a2c2e734acd8, type: 3}
+  throwFrames: {fileID: 2800000, guid: b37d5ce57193c83c2110b2f2b00021eb, type: 3}
+  hurtFrames: {fileID: 2800000, guid: 34ecfcf17bd5d957c221506d09ecd9e8, type: 3}
+  deathFrames: {fileID: 2800000, guid: 3ed6eae445ec1ecd72d04b433e587404, type: 3}
+  frameWidth: 44
+  stridesPerUnit: 0.45
   idlePeriod: 2.2
-  idleBreathPixels: 1
-  idleSwayPixels: 1
-  walkSpeedThreshold: 0.1
-  stepsPerUnit: 0.5
-  walkBobPixels: 2
-  walkSquash: 0.05
-  walkLeanDegrees: 4
-  airborneSpeedThreshold: 0.2
-  airStretch: 0.06
-  blendSpeed: 8
+  throwFrameSeconds:
+  - 0.12
+  - 0.12
+  - 0.22
+  - 0.07
+  - 0.12
+  - 0.16
+  throwReleaseFrame: 3
+  hurtFps: 14
+  deathFps: 11
 --- !u!1 &1216060636
 GameObject:
   m_ObjectHideFlags: 0
@@ -4568,6 +4574,8 @@ MonoBehaviour:
   maxAmount2: 10
   spawnOffset: {x: 0, y: 3, z: 0}
   dropSpread: 0.2
+  boneSprite: {fileID: 21300000, guid: febee23f5bcba2f0f99a8eea0e27c00e, type: 3}
+  boneChips: {fileID: 2800000, guid: 615515b4aab9989287d3600e8998cfce, type: 3}
 --- !u!1 &1288105745
 GameObject:
   m_ObjectHideFlags: 0
@@ -7234,6 +7242,7 @@ GameObject:
   - component: {fileID: 2008131728}
   - component: {fileID: 2008131729}
   - component: {fileID: 2008131730}
+  - component: {fileID: 2008131799}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -7409,6 +7418,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   moveSpeed: 8
   jumpForce: 8
+--- !u!114 &2008131799
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008131723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b37e99b3fb39ad0504c932f090bc4ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WandShooter
+  staffOrbFrames: {fileID: 2800000, guid: 5b59801fe43f083778f06752f83390dc, type: 3}
+  staffBurstFrames: {fileID: 2800000, guid: e9af7fd60da283c678be4812dd6f704f, type: 3}
+  staffSpark: {fileID: 21300000, guid: 86087461a57b5a53b534bcb9fee991fb, type: 3}
+  staffGlow: {r: 0.45, g: 1, b: 0.4, a: 1}
+  staffDamage: 2
+  skullOrbFrames: {fileID: 2800000, guid: de7fdfb2e1c05bc22d831f20a62bc156, type: 3}
+  skullBurstFrames: {fileID: 2800000, guid: e71ecb840a20f5cf27cbe6ec06c28756, type: 3}
+  skullSpark: {fileID: 21300000, guid: 90d104a9377d7e09ffbcf54c56c431b9, type: 3}
+  skullGlow: {r: 0.75, g: 0.45, b: 1, a: 1}
+  skullDamage: 3
+  orbSpeed: 15
+  orbLifetime: 1.4
 --- !u!114 &2008131730
 MonoBehaviour:
   m_ObjectHideFlags: 0

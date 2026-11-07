@@ -47,7 +47,7 @@ public class SpriteSwitcher : MonoBehaviour
 
     private void Start()
     {
-        wizard = FindFirstObjectByType<WizardAnimator>();
+        wizard = FindAnyObjectByType<WizardAnimator>();
         UpdateHeldWeapon();
     }
 

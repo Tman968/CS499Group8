@@ -23,7 +23,7 @@ public class ParallaxLayer : MonoBehaviour
     private Vector3 cameraStart;
     private float tileWidth;
     private SpriteRenderer[] renderers;
-    private bool visible = true;
+    private float alpha = 1f;
 
     void Start()
     {
@@ -44,8 +44,7 @@ public class ParallaxLayer : MonoBehaviour
         }
 
         renderers = GetComponentsInChildren<SpriteRenderer>();
-        foreach (SpriteRenderer r in renderers)
-            r.enabled = visible;
+        ApplyAlpha();
     }
 
     void LateUpdate()
@@ -67,17 +66,28 @@ public class ParallaxLayer : MonoBehaviour
         transform.localScale = new Vector3(zoom, zoom, 1f);
     }
 
-    //Hides the layer (and its copies) without stopping it from following the camera.
-    public void SetVisible(bool value)
+    //Fades the layer (and its copies) in or out without stopping it from following the camera. Fully faded layers aren't drawn at all.
+    public void SetAlpha(float value)
     {
-        if (value == visible)
+        value = Mathf.Clamp01(value);
+        if (Mathf.Approximately(value, alpha))
             return;
 
-        visible = value;
+        alpha = value;
+        ApplyAlpha();
+    }
+
+    void ApplyAlpha()
+    {
         if (renderers == null)
             return;
         foreach (SpriteRenderer r in renderers)
-            r.enabled = value;
+        {
+            Color color = r.color;
+            color.a = alpha;
+            r.color = color;
+            r.enabled = alpha > 0.001f;
+        }
     }
 
     void AddTile(SpriteRenderer original, float offsetX)
