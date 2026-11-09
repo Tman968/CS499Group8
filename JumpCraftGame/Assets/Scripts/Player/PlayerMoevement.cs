@@ -14,6 +14,8 @@ public class PlayerMovement : MonoBehaviour
 
     private Rigidbody2D rb;
     private WizardAnimator wizard;
+    private WandShooter shooter;
+    private PlayerHealth health;
     private bool isGrounded = true;
 
     //Read by CameraFollow to track the height of the ground the player is standing on.
@@ -40,6 +42,17 @@ public class PlayerMovement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         wizard = GetComponent<WizardAnimator>();
+        shooter = GetComponent<WandShooter>();
+        health = GetComponent<PlayerHealth>();
+
+        // No friction, so running into the side of a platform after a missed jump slides you
+        // down it instead of pinning you to the wall. Movement sets velocity directly, so this
+        // doesn't make the ground slippery.
+        var slippery = new PhysicsMaterial2D("PlayerNoFriction") { friction = 0f, bounciness = 0f };
+        foreach (var playerCollider in GetComponents<Collider2D>())
+        {
+            playerCollider.sharedMaterial = slippery;
+        }
     }
 
     void Update()
@@ -47,7 +60,14 @@ public class PlayerMovement : MonoBehaviour
         // Make sure a keyboard is connected
         if (Keyboard.current == null) return;
 
-        // 1. Horizontal Movement Check (WASD vs Arrow Keys)
+        // No control once dead
+        if (health != null && health.IsDead)
+        {
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            return;
+        }
+
+        // 1. Left and Right Movement (A and D keys)
         float moveInput = 0f;
 
         if (useArrowKeys)
@@ -76,13 +96,25 @@ public class PlayerMovement : MonoBehaviour
             isGrounded = false; // Prevent mid-air jumping
         }
 
-        // 3. Wand attack (Space, or left click when not clicking on the HUD). Animation only for now.
+        // 3. Wand attack: left click (not on the HUD) fires an orb toward the mouse,
+        //    Space fires straight ahead
         bool clickedWorld = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame &&
             (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
 
         if ((Keyboard.current.spaceKey.wasPressedThisFrame || clickedWorld) && wizard != null)
+        if (shooter != null && Camera.main != null)
         {
-            wizard.Cast();
+            if (clickedWorld)
+            {
+                Vector3 mouse = Mouse.current.position.ReadValue();
+                mouse.z = -Camera.main.transform.position.z;
+                shooter.FireAt(Camera.main.ScreenToWorldPoint(mouse));
+            }
+            else if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
+                float facing = wizard != null && !wizard.FacingRight ? -1f : 1f;
+                shooter.FireAt((Vector2)transform.position + new Vector2(facing * 10f, 1.5f));
+            }
         }
 
         // 4. Death check (falling below y = -8)
