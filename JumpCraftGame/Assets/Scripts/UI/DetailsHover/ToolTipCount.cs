@@ -3,7 +3,10 @@ using UnityEngine.EventSystems;
 
 public class TooltipSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    [Header("Item Configuration")]
+    [Header("Player & Item Configuration")]
+    [Tooltip("Which player's inventory does this slot represent? (1 or 2)")]
+    public int playerID = 1;
+
     [Tooltip("The unique ID of this item (e.g., 'bone', 'skull', 'skullwand')")]
     public string itemID;
 
@@ -14,11 +17,11 @@ public class TooltipSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     {
         if (string.IsNullOrEmpty(itemID)) return;
 
-        // Fetch current count dynamically from HUDManager
+        // Fetch current count dynamically from HUDManager using the specific playerID
         int currentCount = 0;
         if (HUDManager.Instance != null)
         {
-            currentCount = HUDManager.Instance.GetItemCount(itemID);
+            currentCount = HUDManager.Instance.GetItemCount(playerID, itemID);
         }
 
         // Format details to show your description + the dynamic inventory count

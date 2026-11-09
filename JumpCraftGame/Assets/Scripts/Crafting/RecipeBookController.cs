@@ -73,11 +73,13 @@ public class RecipeBookController : MonoBehaviour
     {
         if (recipeUnlockPanel != null && HUDManager.Instance != null)
         {
-            // If Item 1 is picked up and the panel isn't active yet, turn it on!
-            if (HUDManager.Instance.BoneCollected && !recipeUnlockPanel.activeSelf)
+            // Check if Player 1 has at least 1 bone in their inventory, and the panel isn't active yet
+            bool player1HasBone = HUDManager.Instance.GetItemCount(1, "bone") > 0;
+
+            if (player1HasBone && !recipeUnlockPanel.activeSelf)
             {
                 recipeUnlockPanel.SetActive(true);
-                Debug.Log("Item 1 collected! Unlocking recipe panel inside the book.");
+                Debug.Log("Player 1 collected a bone! Unlocking recipe panel inside the book.");
             }
         }
     }
