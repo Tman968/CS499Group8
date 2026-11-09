@@ -69,3 +69,12 @@ crashlytics-build.properties
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Include the WebGL build used by the React website
+!/JumpCraftWeb/public/game/Build/
+!/JumpCraftWeb/public/game/Build/**
+
+# React website dependencies and generated files
+/JumpCraftWeb/node_modules/
+/JumpCraftWeb/dist/
+/JumpCraftWeb/dist-ssr/
