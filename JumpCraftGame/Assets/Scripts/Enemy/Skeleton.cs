@@ -91,8 +91,12 @@ public class Skeleton : MonoBehaviour
 
     void Start()
     {
-        var playerObject = GameObject.FindWithTag("Player");
-        if (playerObject != null)
+        if (collision.gameObject.CompareTag("Player1"))
+        {
+            DieAndDropItems();
+        }
+
+        if (collision.gameObject.CompareTag("Player2"))
         {
             player = playerObject.transform;
             playerBody = playerObject.GetComponent<Rigidbody2D>();
