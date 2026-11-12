@@ -3,7 +3,8 @@ using UnityEngine.SceneManagement;
 
 public class GameModeManager : MonoBehaviour
 {
-    public static GameModeManager Instance;
+    
+    //public static GameModeManager Instance; //Not needed if Awake() is also inactive
 
     // True = 2-Player Co-op, False = Single Player
     public static bool IsMultiplayer = false;
@@ -11,7 +12,8 @@ public class GameModeManager : MonoBehaviour
     [Header("Scene Names")]
     public string gameplaySceneName = "GameScene"; // Change to your actual gameplay scene name
 
-    private void Awake()
+    //Removed method for now caused problems when game ended, new instances would not load. Saving incase it is essential to other functions
+    /*private void Awake()
     {
         if (Instance == null)
         {
@@ -22,7 +24,7 @@ public class GameModeManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-    }
+    }*/
 
     // Hook this up to your normal "Play" button in the Main Menu
     public void StartSinglePlayer()
