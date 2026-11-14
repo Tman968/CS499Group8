@@ -1,6 +1,4 @@
 using UnityEngine;
-// Required if you ever use advanced Input System features, 
-// though using Key.current works directly with Keyboard.current
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -18,14 +16,22 @@ public class PlayerMovement : MonoBehaviour
     private PlayerHealth health;
     private bool isGrounded = true;
 
-    //Read by CameraFollow to track the height of the ground the player is standing on.
     public bool IsGrounded => isGrounded;
 
+    [Header("Player Assignment")]
+    [Tooltip("Check this if this script instance represents Player 2.")]
+    public bool isPlayerTwo = false;
+
     [Header("Controls Setup")]
-    [Tooltip("Check this box on Player 2's script component so they use Arrow Keys instead of WASD")]
+    [Tooltip("Check this box on Player 2's script component so they use Arrow Keys instead of WASD (if using keyboard)")]
     public bool useArrowKeys = false;
 
-    // Static list to keep track of all active players in the scene
+    [Header("Controller Setup (PS4 / Xbox)")]
+    [Tooltip("Check this to use a connected Gamepad instead of keyboard keys for this player.")]
+    public bool useGamepad = false;
+    [Tooltip("0 for the first plugged-in controller, 1 for the second controller.")]
+    public int gamepadIndex = 0;
+
     private static List<PlayerMovement> activePlayers = new List<PlayerMovement>();
 
     private void OnEnable()
@@ -38,6 +44,7 @@ public class PlayerMovement : MonoBehaviour
     {
         activePlayers.Remove(this);
     }
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -45,86 +52,151 @@ public class PlayerMovement : MonoBehaviour
         shooter = GetComponent<WandShooter>();
         health = GetComponent<PlayerHealth>();
 
-        // No friction, so running into the side of a platform after a missed jump slides you
-        // down it instead of pinning you to the wall. Movement sets velocity directly, so this
-        // doesn't make the ground slippery.
         var slippery = new PhysicsMaterial2D("PlayerNoFriction") { friction = 0f, bounciness = 0f };
         foreach (var playerCollider in GetComponents<Collider2D>())
         {
             playerCollider.sharedMaterial = slippery;
         }
+
+        // --- AUTOMATIC CONTROLLER & PLAYER ASSIGNMENT LOGIC ---
+        int controllerCount = Gamepad.all.Count;
+
+        if (controllerCount == 0)
+        {
+            // 0 Controllers attached: Player 1 uses keyboard, Player 2 uses keyboard (arrow keys)
+            if (!isPlayerTwo)
+            {
+                useGamepad = false;
+                useArrowKeys = false;
+            }
+            else
+            {
+                useGamepad = false;
+                useArrowKeys = true;
+            }
+        }
+        else if (controllerCount == 1)
+        {
+            // 1 Controller attached: Player 1 uses keyboard, Player 2 uses Gamepad 0
+            if (!isPlayerTwo)
+            {
+                useGamepad = false;
+                useArrowKeys = false;
+            }
+            else
+            {
+                useGamepad = true;
+                gamepadIndex = 0;
+            }
+        }
+        else
+        {
+            // 2 or more controllers attached: Player 1 uses Gamepad 0, Player 2 uses Gamepad 1
+            if (!isPlayerTwo)
+            {
+                useGamepad = true;
+                gamepadIndex = 0;
+            }
+            else
+            {
+                useGamepad = true;
+                gamepadIndex = 1;
+            }
+        }
     }
 
     void Update()
     {
-        // Make sure a keyboard is connected
-        if (Keyboard.current == null) return;
-
-        // No control once dead
         if (health != null && health.IsDead)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
         }
 
-        // 1. Left and Right Movement (A and D keys)
         float moveInput = 0f;
+        bool jumpPressed = false;
+        bool attackPressed = false;
 
-        if (useArrowKeys)
+        // --- GAMEPAD INPUT ---
+        if (useGamepad)
         {
-            // Player 2: Left and Right Arrow Keys
-            if (Keyboard.current.leftArrowKey.isPressed) moveInput = -1f;
-            if (Keyboard.current.rightArrowKey.isPressed) moveInput = 1f;
+            Gamepad pad = null;
+            if (Gamepad.all.Count > gamepadIndex)
+            {
+                pad = Gamepad.all[gamepadIndex];
+            }
+            else if (Gamepad.current != null)
+            {
+                pad = Gamepad.current;
+            }
+
+            if (pad != null)
+            {
+                moveInput = pad.leftStick.x.ReadValue();
+                if (Mathf.Abs(moveInput) < 0.2f) moveInput = 0f;
+                else moveInput = Mathf.Sign(moveInput);
+
+                jumpPressed = pad.buttonSouth.wasPressedThisFrame;
+                attackPressed = pad.rightTrigger.wasPressedThisFrame;
+            }
         }
+        // --- KEYBOARD INPUT ---
         else
         {
-            // Player 1: A and D Keys
-            if (Keyboard.current.aKey.isPressed) moveInput = -1f;
-            if (Keyboard.current.dKey.isPressed) moveInput = 1f;
+            if (Keyboard.current != null)
+            {
+                if (useArrowKeys)
+                {
+                    if (Keyboard.current.leftArrowKey.isPressed) moveInput = -1f;
+                    if (Keyboard.current.rightArrowKey.isPressed) moveInput = 1f;
+                    jumpPressed = Keyboard.current.upArrowKey.wasPressedThisFrame;
+                }
+                else
+                {
+                    if (Keyboard.current.aKey.isPressed) moveInput = -1f;
+                    if (Keyboard.current.dKey.isPressed) moveInput = 1f;
+                    jumpPressed = Keyboard.current.wKey.wasPressedThisFrame;
+                }
+
+                bool clickedWorld = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame &&
+                    (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
+
+                attackPressed = Keyboard.current.spaceKey.wasPressedThisFrame || clickedWorld;
+            }
         }
 
-        // Apply horizontal velocity while keeping current vertical velocity
+        // Apply movement velocity
         rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
 
-        // 2. Jumping Check (W key for Player 1, Up Arrow for Player 2)
-        bool jumpPressed = useArrowKeys ? Keyboard.current.upArrowKey.wasPressedThisFrame
-                                        : Keyboard.current.wKey.wasPressedThisFrame;
-
+        // Jump execution
         if (jumpPressed && isGrounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-            isGrounded = false; // Prevent mid-air jumping
+            isGrounded = false;
         }
 
-        // 3. Wand attack: left click (not on the HUD) fires an orb toward the mouse,
-        //    Space fires straight ahead
-        bool clickedWorld = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame &&
-            (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
-
-        if ((Keyboard.current.spaceKey.wasPressedThisFrame || clickedWorld) && wizard != null)
-        if (shooter != null && Camera.main != null)
+        // Wand attack handling using PlayerCrosshair
+        if (attackPressed && wizard != null && shooter != null && Camera.main != null)
         {
-            if (clickedWorld)
+            PlayerCrosshair crosshair = GetComponent<PlayerCrosshair>();
+
+            if (crosshair != null)
             {
-                Vector3 mouse = Mouse.current.position.ReadValue();
-                mouse.z = -Camera.main.transform.position.z;
-                shooter.FireAt(Camera.main.ScreenToWorldPoint(mouse));
+                shooter.FireAt(crosshair.GetAimWorldPosition());
             }
-            else if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            else
             {
                 float facing = wizard != null && !wizard.FacingRight ? -1f : 1f;
                 shooter.FireAt((Vector2)transform.position + new Vector2(facing * 10f, 1.5f));
             }
         }
 
-        // 4. Death check (falling below y = -8)
+        // Fall death check
         if (transform.position.y <= -8)
         {
             bool allPlayersDead = true;
-
             foreach (var player in activePlayers)
             {
-                // If any player is still alive (above or at y > -8), then not everyone is dead yet
                 if (player != null && player.transform.position.y > -8)
                 {
                     allPlayersDead = false;
@@ -141,11 +213,9 @@ public class PlayerMovement : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        //Checks the contact between the player and the platform
-        //Prevents jumping on side and bottom of platforms
         foreach (ContactPoint2D contact in collision.contacts)
         {
-            if (contact.normal.y > 0.5f) //Creates a normal vector based on the y direction of the contact (on top of a platform is positive)
+            if (contact.normal.y > 0.5f)
             {
                 isGrounded = true;
                 break;

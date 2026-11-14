@@ -12,20 +12,6 @@ public class GameModeManager : MonoBehaviour
     [Header("Scene Names")]
     public string gameplaySceneName = "GameScene"; // Change to your actual gameplay scene name
 
-    //Removed method for now caused problems when game ended, new instances would not load. Saving incase it is essential to other functions
-    /*private void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }*/
-
     // Hook this up to your normal "Play" button in the Main Menu
     public void StartSinglePlayer()
     {
