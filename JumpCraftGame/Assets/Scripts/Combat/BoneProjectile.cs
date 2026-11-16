@@ -2,7 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// A bone thrown by a skeleton. It arcs under gravity, tumbling end over end, hurts the player on
-/// contact and shatters on the player or the ground.
+/// contact and shatters on the player or the ground. Wind carries it; blown back hard enough
+/// against its throw it is turned, and hurts skeletons instead of the player.
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 public class BoneProjectile : MonoBehaviour
@@ -13,6 +14,10 @@ public class BoneProjectile : MonoBehaviour
     private Rigidbody2D owner;
     private Sprite[] chips;
     private bool spent;
+    private bool deflected;
+    private Vector2 thrownDirection;
+    private Rigidbody2D rb;
+    private SpriteRenderer spriteRenderer;
 
     /// <summary>
     /// Works out the launch velocity that lands a projectile on target after flightTime seconds,
@@ -50,14 +55,50 @@ public class BoneProjectile : MonoBehaviour
         bone.damage = damage;
         bone.owner = owner;
         bone.chips = chips;
+        bone.rb = body;
+        bone.spriteRenderer = renderer;
+        bone.thrownDirection = velocity.normalized;
         Destroy(go, 6f);
         return bone;
+    }
+
+    void FixedUpdate()
+    {
+        if (spent) return;
+        var air = AirField.At(rb.position);
+        if (air.sqrMagnitude < 0.01f) return;
+        rb.linearVelocity += air * (1.2f * Time.fixedDeltaTime);
+        // Blown back against its throw: it now flies for the wizard.
+        if (!deflected && Vector2.Dot(rb.linearVelocity, thrownDirection) < 0f)
+        {
+            deflected = true;
+            owner = null;
+            spriteRenderer.color = new Color(0.8f, 1f, 0.92f);
+            ElementFx.WindPuff(rb.position, Vector2.up, rb.linearVelocity);
+        }
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
         if (spent || other.isTrigger) return;
         if (owner != null && other.attachedRigidbody == owner) return;
+
+        if (deflected)
+        {
+            var skeleton = other.GetComponentInParent<Skeleton>();
+            if (skeleton != null)
+            {
+                if (skeleton.IsDead) return;
+                skeleton.TakeElementalDamage(damage / 20f, rb.linearVelocity.normalized, true);
+                Shatter();
+                return;
+            }
+            if (other.GetComponentInParent<PlayerHealth>() != null) return;
+            var hitBody = other.attachedRigidbody;
+            if (hitBody == null || hitBody.bodyType == RigidbodyType2D.Static) Shatter();
+            return;
+        }
+
         if (other.GetComponentInParent<Skeleton>() != null) return;
 
         var health = other.GetComponentInParent<PlayerHealth>();

@@ -2,8 +2,8 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Frame-based animation for the wizard: idle, run, rise, glide and a wand cast, plus a held
-/// weapon that can be swapped at runtime.
+/// Frame-based animation for the wizard: idle, run, rise, glide, a one-shot wand cast and a held
+/// channel (for pouring a continuous stream), plus a held weapon that can be swapped at runtime.
 ///
 /// Body frames are horizontal strips made by Tools/generate_wizard_frames.py. The weapon and the
 /// hand gripping it are separate sprites on a "Grip" child, so they can be swapped and swung.
@@ -90,11 +90,22 @@ public class WizardAnimator : MonoBehaviour
     [Tooltip("How far the weapon can point, in degrees from straight up (negative is forward).")]
     public Vector2 aimAngleRange = new(-140f, 20f);
 
+    [Header("Channel")]
+    [Tooltip("How far the weapon can point while channelling, in degrees from straight up (negative is forward). " +
+             "Wider than a cast so a stream can be aimed straight down.")]
+    public Vector2 channelAimRange = new(-178f, 30f);
+    [Tooltip("Frames per second of the held channel pose's loop.")]
+    public float channelHoldFps = 7f;
+
     [Header("Hurt")]
     public Color hurtColor = new(1f, 0.35f, 0.35f, 1f);
     public float hurtFlashSeconds = 0.5f;
 
+    /// <summary>A tint from elemental effects (chilled blue, burning, shocked), multiplied in.</summary>
+    [System.NonSerialized] public Color statusTint = Color.white;
+
     public bool IsCasting => castTime >= 0f;
+    public bool IsChanneling => channeling;
     public bool FacingRight => facingRight;
 
     private Rigidbody2D rb;
@@ -112,6 +123,12 @@ public class WizardAnimator : MonoBehaviour
     private Action<Vector3, Vector2> onCastRelease;
     private bool castReleased;
     private float hurtTimer;
+    private bool channeling;
+    private bool channelPose;
+    private float channelTime;
+    private float channelShake;
+    private Vector2 channelTarget;
+    private static readonly int[] ChannelHoldLoop = { 3, 4, 5, 4 };
 
     void Awake()
     {
@@ -150,6 +167,53 @@ public class WizardAnimator : MonoBehaviour
         if (weaponRenderer != null) weaponRenderer.sprite = newWeapon;
     }
 
+    /// <summary>Puts a different weapon in the wizard's hand, with its tip tipPixels above the grip.</summary>
+    public void SetWeapon(Sprite newWeapon, float tipPixels)
+    {
+        SetWeapon(newWeapon);
+        weaponTipPixels = tipPixels;
+    }
+
+    /// <summary>
+    /// Holds the weapon out toward target (world space) for this frame, as if pouring a stream from
+    /// it. Call every frame while channelling. shake (degrees) makes the weapon judder with the
+    /// force of what is pouring out. The pose eases in through the cast's raise frames and then
+    /// holds; while running or in the air the body keeps moving and only the arm aims.
+    /// </summary>
+    public void Channel(Vector2 target, float shake)
+    {
+        if (!enabled) return;
+        if (!channeling)
+        {
+            channeling = true;
+            channelTime = 0f;
+            castTime = -1f;
+            onCastRelease = null;
+        }
+        channelTarget = target;
+        channelShake = shake;
+        var dx = target.x - transform.position.x;
+        if (Mathf.Abs(dx) > 0.15f) facingRight = dx > 0f;
+    }
+
+    /// <summary>Lowers the weapon after channelling, playing the cast's recovery frames.</summary>
+    public void EndChannel()
+    {
+        if (!channeling) return;
+        channeling = false;
+        if (!channelPose || cast.Length == 0) return;
+        // Pick the cast up at its recovery, with nothing left to release.
+        var t = 0f;
+        for (var i = 0; i < Mathf.Min(6, cast.Length); i++) t += i < castFrameSeconds.Length ? castFrameSeconds[i] : 0.08f;
+        castTime = t;
+        castTarget = channelTarget;
+        castReleased = true;
+        onCastRelease = null;
+    }
+
+    /// <summary>The way the weapon points, in world space.</summary>
+    public Vector2 WeaponDirection() => grip != null ? ((Vector2)grip.TransformDirection(Vector3.up)).normalized : Vector2.right;
+
     /// <summary>
     /// Turns toward target (world space) and thrusts the weapon at it. onRelease runs on the thrust
     /// frame with the weapon's tip and the target. Returns false while the previous cast is still
@@ -179,7 +243,7 @@ public class WizardAnimator : MonoBehaviour
         var running = !airborne && speed > runSpeedThreshold;
 
         // Keep facing the last direction moved in when stopping. While casting, face the target.
-        if (speed > runSpeedThreshold && !IsCasting) facingRight = velocity.x > 0f;
+        if (speed > runSpeedThreshold && !IsCasting && !channeling) facingRight = velocity.x > 0f;
 
         airWeight = Mathf.MoveTowards(airWeight, airborne ? 1f : 0f, 8f * dt);
         airTime = airborne ? airTime + dt : 0f;
@@ -225,6 +289,40 @@ public class WizardAnimator : MonoBehaviour
             breath = 0.5f - 0.5f * Mathf.Cos(idlePhase * 2f * Mathf.PI);
         }
 
+        // Channelling overrides the pose: the cast's raise and hold frames when standing still,
+        // just the aimed arm when running or airborne.
+        channelPose = false;
+        if (channeling)
+        {
+            channelTime += dt;
+            castTarget = channelTarget;
+            var standing = !airborne && !running && cast.Length >= 6;
+            if (standing)
+            {
+                var enter = 0f;
+                var i = 0;
+                for (; i < 3; i++)
+                {
+                    var seconds = i < castFrameSeconds.Length ? castFrameSeconds[i] : 0.08f;
+                    if (channelTime < enter + seconds) break;
+                    enter += seconds;
+                }
+                var f = i < 3 ? i : ChannelHoldLoop[(int)((channelTime - enter) * channelHoldFps) % ChannelHoldLoop.Length];
+                frame = cast[f];
+                handPx = CastHands[Mathf.Min(f, CastHands.Length - 1)];
+                bobPx = 0f;
+                breath = 0f;
+                // The wand points where the stream goes from the first frame; only the body eases in.
+                angle = AimAngle(channelAimRange);
+                channelPose = true;
+            }
+            else
+            {
+                angle = AimAngle(channelAimRange);
+            }
+            angle += UnityEngine.Random.Range(-channelShake, channelShake);
+        }
+
         body.sprite = frame;
         var heightPx = frame.rect.height;
         var widthPx = frame.rect.width;
@@ -259,20 +357,24 @@ public class WizardAnimator : MonoBehaviour
         hurtTimer -= dt;
         // Flicker between the hurt tint and normal while the flash lasts.
         var tint = hurtTimer > 0f && (int)(hurtTimer * 16f) % 2 == 0 ? hurtColor : Color.white;
-        body.color = weaponRenderer.color = handRenderer.color = tint;
+        body.color = weaponRenderer.color = handRenderer.color = tint * statusTint;
     }
 
     /// <summary>Where spells leave the weapon, in world space.</summary>
     public Vector3 WeaponTip() => grip.TransformPoint(new Vector3(0f, weaponTipPixels / pixelsPerUnit, 0f));
 
     // The weapon angle that points it from the grip at the cast target, for art facing right.
-    float AimAngle()
+    float AimAngle() => AimAngle(aimAngleRange);
+
+    float AimAngle(Vector2 range)
     {
         var mirror = facingRight == artFacesRight ? 1f : -1f;
         var to = castTarget - (Vector2)grip.position;
         var forward = to.x * mirror * (artFacesRight ? 1f : -1f);
         var angle = Mathf.Atan2(-forward, to.y) * Mathf.Rad2Deg;
-        return Mathf.Clamp(angle, aimAngleRange.x, aimAngleRange.y);
+        // Straight down (or slightly behind) comes out near +180: treat it as pointing down and forward.
+        if (angle > 90f) angle -= 360f;
+        return Mathf.Clamp(angle, range.x, range.y);
     }
 
     int CurrentCastFrame()

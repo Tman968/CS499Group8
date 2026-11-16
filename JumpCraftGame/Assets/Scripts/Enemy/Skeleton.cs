@@ -2,8 +2,9 @@ using UnityEngine;
 
 /// <summary>
 /// A skeleton that marches toward the player without stepping off its platform, and hurls bones
-/// that lead the player's movement. Wand orbs wound it and knock it back; when its health runs
-/// out it collapses and drops its items.
+/// that lead the player's movement. The wands wound it: fire sets it alight, ice chills and then
+/// freezes it solid, lightning stuns it, and wind can blow it clean off a ledge. It can't aim
+/// through steam or a blizzard. When its health runs out it collapses and drops its items.
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 public class Skeleton : MonoBehaviour
@@ -33,8 +34,10 @@ public class Skeleton : MonoBehaviour
     public float dropSpread = 0.3f;
 
     [Header("Health")]
-    [Tooltip("The default staff's orbs do 2 (3 hits), the skull wand's do 3 (2 hits).")]
+    [Tooltip("Elemental damage is measured against this: a one-second burst of fire or a few ice shards.")]
     public int maxHealth = 6;
+    [Tooltip("Falling below this height (blown off a ledge, say) kills the skeleton.")]
+    public float fallDeathY = -14f;
     [Tooltip("How far a hit knocks the skeleton back, in world units (about a quarter of a platform).")]
     public float knockbackDistance = 1f;
     [Tooltip("How long the knockback slide lasts, in seconds.")]
@@ -71,7 +74,9 @@ public class Skeleton : MonoBehaviour
     private Rigidbody2D playerBody;
     private Collider2D playerCollider;
     private Sprite[] chips;
-    private int health;
+    private float health;
+    private float flinchTimer;
+    private ElementStatus status;
     private float throwTimer;
     private float knockbackTimer;
     private float knockbackSpeed;
@@ -84,6 +89,12 @@ public class Skeleton : MonoBehaviour
         rb.mass = mass;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         health = maxHealth;
+        status = GetComponent<ElementStatus>();
+        if (status == null)
+        {
+            status = gameObject.AddComponent<ElementStatus>();
+            status.airResponse = 0.55f;
+        }
         chips = SpriteStrip.SliceCentered(boneChips);
         // Don't open fire the instant the player appears.
         throwTimer = throwCooldown * 0.6f;
@@ -104,13 +115,32 @@ public class Skeleton : MonoBehaviour
     {
         var vy = rb.linearVelocity.y;
         if (IsDead) return;
+        vy += status.ConsumeLift();
+        // Wind and blasts carry the skeleton along on top of its own walking, even over the edge.
+        // Solid ground soon stops a shove; frost and ice don't.
+        if (Grounded() && !SurfaceGrid.Probe(new Vector2(bodyCollider.bounds.center.x, bodyCollider.bounds.min.y)).slippery)
+            status.DampDrift(4f, Time.fixedDeltaTime);
+        var drift = status.Drift;
+
+        if (transform.position.y < fallDeathY)
+        {
+            Die();
+            return;
+        }
+
+        // Frozen solid or stunned: no marching, only drifting.
+        if (status.IsStunned)
+        {
+            rb.linearVelocity = new Vector2(drift, vy);
+            return;
+        }
 
         // Knocked back: slide away from the hit, but never off the edge of the platform.
         if (knockbackTimer > 0f)
         {
             knockbackTimer -= Time.fixedDeltaTime;
             var dir = Mathf.Sign(knockbackSpeed);
-            rb.linearVelocity = new Vector2(CanStep(dir) ? knockbackSpeed : 0f, vy);
+            rb.linearVelocity = new Vector2((CanStep(dir) ? knockbackSpeed : 0f) + drift, vy);
             return;
         }
 
@@ -121,16 +151,21 @@ public class Skeleton : MonoBehaviour
             var dx = player.position.x - transform.position.x;
             var dir = Mathf.Sign(dx);
             animator.Face(dir > 0f);
-            if (Mathf.Abs(dx) > keepDistance && CanStep(dir)) vx = dir * walkSpeed;
+            if (Mathf.Abs(dx) > keepDistance && CanStep(dir)) vx = dir * walkSpeed * status.MoveMultiplier;
         }
-        rb.linearVelocity = new Vector2(vx, vy);
+        rb.linearVelocity = new Vector2(vx + drift, vy);
     }
 
     void Update()
     {
         if (IsDead || player == null) return;
+        flinchTimer -= Time.deltaTime;
+        if (status.IsStunned) return;
         throwTimer -= Time.deltaTime;
         if (throwTimer > 0f || animator.IsBusy || !Grounded()) return;
+
+        // Steam and blizzards hide the player.
+        if (ElementWorld.SightBlocked(bodyCollider.bounds.center, PlayerCenter())) return;
 
         var toPlayer = PlayerCenter() - (Vector2)transform.position;
         if (Mathf.Abs(toPlayer.x) <= throwRange && Mathf.Abs(toPlayer.y) <= throwRange * 0.7f)
@@ -203,6 +238,32 @@ public class Skeleton : MonoBehaviour
         BoneProjectile.Throw(boneSprite, chips, from, velocity, boneDamage, boneGravityScale, rb);
     }
 
+    /// <summary>
+    /// Wounds the skeleton with an element's continuous damage. It flinches (and sheds chips) at
+    /// most a few times a second, however many motes hit it, and only if flinch is set.
+    /// </summary>
+    public void TakeElementalDamage(float damage, Vector2 direction, bool flinch)
+    {
+        if (IsDead || damage <= 0f) return;
+        health -= damage;
+        if (health <= 0f)
+        {
+            SpawnChips(Mathf.Abs(direction.x) > 0.01f ? Mathf.Sign(direction.x) : 1f, 10);
+            Die();
+            return;
+        }
+        if (!flinch || flinchTimer > 0f || status.IsFrozen) return;
+        flinchTimer = 0.35f;
+        var dir = Mathf.Abs(direction.x) > 0.01f ? Mathf.Sign(direction.x)
+            : player != null ? Mathf.Sign(transform.position.x - player.position.x) : 1f;
+        SpawnChips(dir, 3);
+        animator.Face(dir < 0f);
+        animator.PlayHurt();
+        knockbackSpeed = dir * knockbackDistance * 0.4f / knockbackTime;
+        knockbackTimer = knockbackTime;
+        throwTimer = Mathf.Max(throwTimer, 0.4f);
+    }
+
     /// <summary>Wounds the skeleton. hitVelocity is the projectile's velocity, used for knockback.</summary>
     public void TakeHit(int damage, Vector2 hitVelocity)
     {
@@ -241,7 +302,10 @@ public class Skeleton : MonoBehaviour
 
     void Die()
     {
+        if (IsDead) return;
         IsDead = true;
+        if (animator != null) animator.enabled = true;
+        if (animator != null && animator.body != null) animator.body.color = Color.white;
         knockbackTimer = 0f;
         // Freeze the heap of bones in place, and let the player and the dropped items pass through it.
         rb.linearVelocity = Vector2.zero;

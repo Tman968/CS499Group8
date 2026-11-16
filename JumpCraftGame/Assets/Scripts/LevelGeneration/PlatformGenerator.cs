@@ -22,6 +22,10 @@ public class PlatformGenerator : MonoBehaviour
 
     public float cleanupBehindDistance = 15f;
 
+    //Optional: furnishes new platforms with puddles, crates, hazards and skeletons for the wands to work on.
+    public LevelDressing dressing;
+    private GameObject lastPlatform;
+
     private List<GameObject> spawnedPlatforms =
         new List<GameObject>();
 
@@ -46,6 +50,8 @@ public class PlatformGenerator : MonoBehaviour
 
         // Set the first platform's spawn position
         nextSpawnX = startRightEdge + gapBetweenPlatforms + platformWidth / 2f;
+        lastPlatform = startingPlatform.gameObject;
+        if (dressing == null) dressing = GetComponent<LevelDressing>();
 
         GeneratePlatforms();
     }
@@ -72,6 +78,8 @@ public class PlatformGenerator : MonoBehaviour
             Debug.Log("Spawned platform at Y: " + randomHeight);
 
             spawnedPlatforms.Add(newPlatform);
+            if (dressing != null) dressing.Decorate(newPlatform, lastPlatform);
+            lastPlatform = newPlatform;
 
             nextSpawnX += platformWidth + gapBetweenPlatforms;
 

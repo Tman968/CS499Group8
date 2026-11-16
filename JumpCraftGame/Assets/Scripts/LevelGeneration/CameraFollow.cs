@@ -24,6 +24,7 @@ public class CameraFollow : MonoBehaviour
     private float fixedZ = 0f;
     private float groundY = 0f;
     private float yVelocity = 0f;
+    private float baseY = 0f;
     private Camera cam;
     private PlayerMovement playerMovement;
 
@@ -31,6 +32,7 @@ public class CameraFollow : MonoBehaviour
     void Start()
     {
         fixedZ = transform.position.z;
+        baseY = transform.position.y;
         cam = GetComponent<Camera>();
         if (player != null)
         {
@@ -57,9 +59,11 @@ public class CameraFollow : MonoBehaviour
         targetY = Mathf.Min(targetY, player.position.y + cam.orthographicSize - 1f);
         targetY = Mathf.Max(targetY, minY);
 
-        float y = Mathf.SmoothDamp(transform.position.y, targetY, ref yVelocity, verticalSmoothTime);
+        float y = Mathf.SmoothDamp(baseY, targetY, ref yVelocity, verticalSmoothTime);
+        baseY = y;
 
         //Sets position of the camera to the players X position -> Makes the player in the center of the screen (for x values only) at all times.
-        transform.position = new Vector3(player.position.x, y, fixedZ);
+        //Explosions and lightning strikes shake it (CameraShake).
+        transform.position = new Vector3(player.position.x, y, fixedZ) + CameraShake.Offset;
     }
 }
