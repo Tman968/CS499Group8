@@ -134,7 +134,11 @@ public class SkeletonAnimator : MonoBehaviour
             default:
                 if (speed > 0.1f && walk.Length > 0)
                 {
+                    var lastStride = stridePhase;
                     stridePhase = Mathf.Repeat(stridePhase + speed * stridesPerUnit * dt, 1f);
+                    // A bony clack each time a foot comes down, twice a stride.
+                    if (stridePhase < lastStride || (lastStride < 0.5f && stridePhase >= 0.5f))
+                        Sfx.Play("skel_step", transform.position);
                     frame = walk[(int)(stridePhase * walk.Length) % walk.Length];
                 }
                 else

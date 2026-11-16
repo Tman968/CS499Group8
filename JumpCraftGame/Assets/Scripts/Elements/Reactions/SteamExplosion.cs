@@ -13,6 +13,9 @@ public class SteamExplosion : ElementReaction
     protected override float Sustain => 4.5f;
     protected override float MaxLife => 14f;
 
+    protected override string LoopSound => "steam_loop";
+    protected override float LoopVolume => Fade(1.5f);
+
     float radius = 0.5f;
     float pulseCharge;
     float pulseCooldown;
@@ -32,6 +35,7 @@ public class SteamExplosion : ElementReaction
     void Explode(float scale)
     {
         var c = Center;
+        Sfx.Play("steam_boom", c, scale, 1.05f - 0.1f * scale);
         ReactionArea.Blast(c, 2.6f * scale, 9f * scale);
         ReactionArea.Characters(c, 2.4f * scale, (s, k) =>
         {

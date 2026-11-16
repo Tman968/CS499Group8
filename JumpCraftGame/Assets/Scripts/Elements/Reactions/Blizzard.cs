@@ -18,8 +18,11 @@ public class Blizzard : ElementReaction
     float frostTimer;
     float tickTimer;
 
+    protected override string LoopSound => "blizzard_loop";
+
     protected override void OnBegin()
     {
+        Sfx.Play("blizzard_start", Center);
         ElementLights.Burst(Center, Elements.Glow(Element.Ice), 3f, 1.4f, 0.3f);
         ElementFx.IceShatter(Center, 14, flow.normalized * 3f);
     }

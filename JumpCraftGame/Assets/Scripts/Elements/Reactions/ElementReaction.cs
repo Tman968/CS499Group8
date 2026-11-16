@@ -61,6 +61,12 @@ public abstract class ElementReaction : MonoBehaviour
     /// <summary>1 while running, falling to 0 over the last fadeSeconds.</summary>
     protected float Fade(float fadeSeconds = 0.8f) => Mathf.Clamp01(Remaining / fadeSeconds);
 
+    /// <summary>The sound that loops while the reaction runs (Resources/Audio), or null.</summary>
+    protected virtual string LoopSound => null;
+    /// <summary>How loud the loop is now: it swells with intensity and dies away with the reaction.</summary>
+    protected virtual float LoopVolume => Fade() * Mathf.Lerp(0.6f, 1f, intensity / MaxIntensity);
+    protected virtual Vector2 LoopPosition => Center;
+
     protected virtual void OnBegin() { }
     protected virtual void OnFeed(Vector2 at) { }
     protected abstract void Tick(float dt);
@@ -82,5 +88,6 @@ public abstract class ElementReaction : MonoBehaviour
         }
         Tick(dt);
         transform.position = Center;
+        if (LoopSound != null) Sfx.Loop(this, LoopSound, LoopPosition, LoopVolume);
     }
 }

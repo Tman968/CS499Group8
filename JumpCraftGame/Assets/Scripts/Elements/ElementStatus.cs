@@ -111,6 +111,7 @@ public class ElementStatus : MonoBehaviour
             return;
         }
         chill = Mathf.Max(0f, chill - 0.3f);
+        if (burnTimer <= 0f) Sfx.Play("ignite", Center, IsPlayer ? 0.8f : 0.6f);
         burnTimer = Mathf.Max(burnTimer, seconds);
         burnDps = Mathf.Max(burnDps, dps);
     }
@@ -131,6 +132,7 @@ public class ElementStatus : MonoBehaviour
     public void Freeze(float seconds)
     {
         if (!canFreeze || IsDead) return;
+        if (frozenTimer <= 0f) Sfx.Play("freeze", Center);
         frozenTimer = Mathf.Max(frozenTimer, seconds);
         burnTimer = 0f;
         chill = 0f;
@@ -153,6 +155,7 @@ public class ElementStatus : MonoBehaviour
     public void Shock(float seconds)
     {
         if (IsDead) return;
+        if (stunTimer <= 0f && seconds >= 0.25f) Sfx.Play("shock", Center, IsPlayer ? 0.9f : 0.6f);
         stunTimer = Mathf.Max(stunTimer, seconds);
     }
 
@@ -194,10 +197,12 @@ public class ElementStatus : MonoBehaviour
         frozenTimer = 0f;
         if (skeletonAnimator != null) skeletonAnimator.enabled = true;
         ElementFx.IceShatter(Center, 22, Vector2.up * 2f);
+        Sfx.Play("ice_shatter", Center);
     }
 
     void Thaw()
     {
+        Sfx.Play("thaw", Center);
         frozenTimer = 0f;
         if (skeletonAnimator != null) skeletonAnimator.enabled = true;
         SteamPuff(Center, 8);
@@ -250,6 +255,7 @@ public class ElementStatus : MonoBehaviour
                 frozenTimer = 0f;
                 if (skeletonAnimator != null) skeletonAnimator.enabled = true;
                 ElementFx.IceShatter(Center, 16, Vector2.up);
+                Sfx.Play("ice_shatter", Center, 0.6f, 1.1f);
             }
         }
         stunTimer = Mathf.Max(0f, stunTimer - dt);
@@ -260,6 +266,7 @@ public class ElementStatus : MonoBehaviour
         {
             burnTimer -= dt;
             Damage(burnDps * dt, Element.Fire, Vector2.zero, false);
+            Sfx.Loop(this, "burn_loop", Center, Mathf.Clamp01(burnTimer * 1.5f));
         }
 
         surfaceTimer -= dt;
@@ -344,6 +351,7 @@ public class ElementStatus : MonoBehaviour
 
     static void SteamPuff(Vector2 at, int count)
     {
+        Sfx.Play("steam_puff", at, Mathf.Clamp01(count / 6f));
         for (var i = 0; i < count; i++)
         {
             ArcaneParticles.Emit(FxLayer.Veil, new Spark

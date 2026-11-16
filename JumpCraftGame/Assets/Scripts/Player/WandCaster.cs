@@ -6,19 +6,31 @@ using UnityEngine.InputSystem;
 /// Pours the selected wand's element while the attack is held: left mouse aims at the cursor,
 /// Space pours straight ahead. 1-4, Q/E or the mouse wheel swap wands at any time.
 ///
-/// The force of the stream pushes back on the wizard. For most wands that is just a judder, but
-/// the wind wand's recoil is strong enough to fly on: pour it at the ground to rise, behind you
-/// to dash. A wand drained to nothing backfires (see Backlash).
+/// The force of the stream pushes back on the wizard. For most wands that is just a judder; the
+/// wind wand's recoil shoves him along (pour it behind you to dash) and, poured at the ground,
+/// gives a mild boost upward: a hop from standing, a little extra height on a jump, a softer
+/// landing. The lift is rationed per trip off the ground (windLiftBudget), so it can't be flown on.
+/// A wand drained to nothing backfires (see Backlash).
+///
+/// Each stream has its sound: a burst as it starts, a loop while it pours and a tail as it stops.
 /// </summary>
 [RequireComponent(typeof(WandBelt), typeof(WizardAnimator))]
 public class WandCaster : MonoBehaviour
 {
     [Tooltip("Push back on the wizard from each stream (units/s^2): fire, ice, lightning, wind.")]
-    public float[] recoil = { 2.5f, 1.5f, 1.2f, 26f };
+    public float[] recoil = { 2.5f, 1.5f, 1.2f, 16f };
     [Tooltip("How much the wand judders while pouring, in degrees: fire, ice, lightning, wind.")]
     public float[] judder = { 2f, 1f, 4f, 1.5f };
     [Tooltip("Seconds after an ice backfire during which the frozen hand can't cast.")]
     public float frozenHandSeconds = 1.2f;
+
+    [Header("Wind lift")]
+    [Tooltip("Upward push from the wind wand's recoil when pouring at the ground (units/s^2).")]
+    public float windUpRecoil = 30f;
+    [Tooltip("Total upward speed (units/s) the wind wand can add in one trip off the ground. Enough for a hop, never flight.")]
+    public float windLiftBudget = 7f;
+    [Tooltip("The wind wand adds no lift while the wizard is already rising faster than this (units/s).")]
+    public float windLiftCeiling = 4f;
 
     public bool IsPouring { get; private set; }
 
@@ -26,10 +38,29 @@ public class WandCaster : MonoBehaviour
     WizardAnimator wizard;
     ElementStatus status;
     PlayerHealth health;
+    PlayerMovement movement;
     Rigidbody2D rb;
     WandStream[] streams;
     bool mouseHeld;
     float handFrozen;
+    float windLiftLeft;
+    bool wasPouring;
+    bool wantedLastFrame;
+    Element pouredElement;
+
+    // Sound names per element, built once so nothing is allocated while pouring.
+    static readonly string[] StartSound = Names("wand_{0}_start");
+    static readonly string[] LoopSound = Names("wand_{0}_loop");
+    static readonly string[] EndSound = Names("wand_{0}_end");
+    static readonly string[] SwapSound = Names("wand_swap_{0}");
+    static readonly string[] BackfireSound = Names("backfire_{0}");
+
+    static string[] Names(string format)
+    {
+        var names = new string[Elements.Count];
+        for (var i = 0; i < names.Length; i++) names[i] = string.Format(format, Sfx.ElementKey[i]);
+        return names;
+    }
 
     void Awake()
     {
@@ -37,6 +68,7 @@ public class WandCaster : MonoBehaviour
         wizard = GetComponent<WizardAnimator>();
         rb = GetComponent<Rigidbody2D>();
         health = GetComponent<PlayerHealth>();
+        movement = GetComponent<PlayerMovement>();
         status = GetComponent<ElementStatus>();
         if (status == null) status = gameObject.AddComponent<ElementStatus>();
     }
@@ -59,12 +91,21 @@ public class WandCaster : MonoBehaviour
     {
         var dt = Time.deltaTime;
         handFrozen -= dt;
+        var held = belt.Current;
         ReadSwap();
+        if (belt.Current != held) Sfx.PlayFlat(SwapSound[(int)belt.Current]);
+
+        // Back on the ground, the wind wand's lift is ready again.
+        if (movement == null || (movement.OnGround && rb.linearVelocity.y < 0.5f)) windLiftLeft = windLiftBudget;
 
         var dead = health != null && health.IsDead;
         var wantsToPour = WantsToPour(out var target) && !dead;
         var element = belt.Current;
         var canPour = wantsToPour && !belt.IsBurntOut(element) && !status.IsStunned && handFrozen <= 0f;
+        // Pulling the trigger on a dead or frozen wand: a dry click and a sputter.
+        if (wantsToPour && !wantedLastFrame && (belt.IsBurntOut(element) || handFrozen > 0f))
+            Sfx.Play("wand_empty", wizard.WeaponTip());
+        wantedLastFrame = wantsToPour;
 
         IsPouring = false;
         if (canPour)
@@ -76,13 +117,14 @@ public class WandCaster : MonoBehaviour
             {
                 IsPouring = true;
                 streams[(int)element].Pour(tip, dir, dt);
-                status.AddPush(-dir * (recoil[(int)element] * dt));
+                status.AddPush(Recoil(element, dir, dt));
             }
         }
         else
         {
             wizard.EndChannel();
         }
+        PlayStreamSounds(element);
 
         for (var i = 0; i < streams.Length; i++)
             if (!IsPouring || i != (int)element) streams[i].Rest(dt);
@@ -94,6 +136,37 @@ public class WandCaster : MonoBehaviour
             if (belt.IsBurntOut(element)) ElementFx.Sputter(element, tipNow);
             else ElementFx.TipIdle(element, tipNow, belt.Charge(element));
         }
+    }
+
+    Vector2 Recoil(Element element, Vector2 dir, float dt)
+    {
+        var push = -dir * (recoil[(int)element] * dt);
+        if (element != Element.Wind || dir.y >= 0f) return push;
+        // Pouring wind at the ground lifts the wizard, but only by so much per trip off the ground,
+        // and not at all while he is already rising: a boost, not a jetpack.
+        var up = -dir.y * windUpRecoil * dt;
+        if (rb.linearVelocity.y > windLiftCeiling) up = 0f;
+        up = Mathf.Min(up, windLiftLeft);
+        windLiftLeft -= up;
+        push.y = up;
+        return push;
+    }
+
+    void PlayStreamSounds(Element element)
+    {
+        var tip = (Vector2)wizard.WeaponTip();
+        if (IsPouring)
+        {
+            if (!wasPouring || pouredElement != element)
+            {
+                if (wasPouring) Sfx.Play(EndSound[(int)pouredElement], tip);
+                Sfx.Play(StartSound[(int)element], tip);
+            }
+            Sfx.Loop(this, LoopSound[(int)element], tip, 1f);
+            pouredElement = element;
+        }
+        else if (wasPouring) Sfx.Play(EndSound[(int)pouredElement], tip);
+        wasPouring = IsPouring;
     }
 
     bool WantsToPour(out Vector2 target)
@@ -210,7 +283,8 @@ public class WandCaster : MonoBehaviour
                 break;
         }
         CameraShake.Add(0.35f);
+        Sfx.Play(BackfireSound[(int)element], tip);
         if (ItemNotificationPopup.Instance != null)
-            ItemNotificationPopup.Instance.TriggerPopup($"{Elements.Name(element)} wand burnt out!");
+            ItemNotificationPopup.Instance.TriggerPopup($"{Elements.Name(element)} wand burnt out!", false);
     }
 }

@@ -130,6 +130,20 @@ public class WizardAnimator : MonoBehaviour
     private Vector2 channelTarget;
     private static readonly int[] ChannelHoldLoop = { 3, 4, 5, 4 };
 
+    // True if the stride phase passed mark going from a to b (wrapping round at 1).
+    static bool Crossed(float a, float b, float mark) => b >= a ? a < mark && mark <= b : mark > a || mark <= b;
+
+    void Footfall()
+    {
+        if (bodyCollider == null) bodyCollider = GetComponent<Collider2D>();
+        var feet = bodyCollider != null
+            ? new Vector2(bodyCollider.bounds.center.x, bodyCollider.bounds.min.y)
+            : (Vector2)transform.position;
+        Sfx.Footstep(feet);
+    }
+
+    private Collider2D bodyCollider;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -248,7 +262,10 @@ public class WizardAnimator : MonoBehaviour
         airWeight = Mathf.MoveTowards(airWeight, airborne ? 1f : 0f, 8f * dt);
         airTime = airborne ? airTime + dt : 0f;
         idlePhase = Mathf.Repeat(idlePhase + dt / idlePeriod, 1f);
+        var lastPhase = runPhase;
         runPhase = running ? Mathf.Repeat(runPhase + speed * stridesPerUnit * dt, 1f) : 0f;
+        // A footfall each time a foot plants: the lowest frames of the stride (RunBob 0).
+        if (running && (Crossed(lastPhase, runPhase, 0.25f) || Crossed(lastPhase, runPhase, 0.75f))) Footfall();
 
         var frame = idle.Length > 0 ? idle[0] : body.sprite;
         var handPx = gripPixel;

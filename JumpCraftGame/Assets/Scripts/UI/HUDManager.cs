@@ -46,18 +46,19 @@ public class HUDManager : MonoBehaviour
 
         int current = GetItemCount(cleanID);
         SetItemCount(cleanID, current + amount);
+        PlayPickupSound(cleanID);
 
         // Trigger notifications with custom text based on what was picked up
         if (cleanID == "bone" && recipeUnlocked == false)
         {
             if (ItemNotificationPopup.Instance != null)
-                ItemNotificationPopup.Instance.TriggerPopup("Recipe Book Updated!");
+                ItemNotificationPopup.Instance.TriggerPopup("Recipe Book Updated!", false);
             recipeUnlocked = true;
         }
         else if (cleanID == "skullkey")
         {
             if (ItemNotificationPopup.Instance != null)
-                ItemNotificationPopup.Instance.TriggerPopup("Exit Key Acquired!");
+                ItemNotificationPopup.Instance.TriggerPopup("Exit Key Acquired!", false);
 
             if (ItemPickupDisplay.Instance != null)
             {
@@ -67,7 +68,7 @@ public class HUDManager : MonoBehaviour
         else if (cleanID == "skullwand" || cleanID == "item3")
         {
             if (ItemNotificationPopup.Instance != null)
-                ItemNotificationPopup.Instance.TriggerPopup("Weapon Updated!");
+                ItemNotificationPopup.Instance.TriggerPopup("Weapon Updated!", false);
 
             // Equip the new weapon and let the change weapon button toggle it
             if (SpriteSwitcher.Instance != null)
@@ -78,6 +79,28 @@ public class HUDManager : MonoBehaviour
     }
 
     public void CollectItem(string id) { CollectItem(id, 1); }
+
+    // Each kind of find has its own sound; the first bone also turns a page of the recipe book.
+    void PlayPickupSound(string cleanID)
+    {
+        switch (cleanID)
+        {
+            case "skullkey":
+                Sfx.PlayFlat("key_get");
+                break;
+            case "skullwand":
+            case "item3":
+                Sfx.PlayFlat("weapon_get");
+                break;
+            case "skull":
+                Sfx.PlayFlat("pickup_rare");
+                break;
+            default:
+                Sfx.PlayFlat("pickup");
+                if (cleanID == "bone" && !recipeUnlocked) Sfx.PlayFlat("recipe_get");
+                break;
+        }
+    }
 
     // SCALABLE GETTER: Query count for any item ID
     public int GetItemCount(string id)
@@ -99,6 +122,7 @@ public class HUDManager : MonoBehaviour
         {
             SetItemCount("bone", GetItemCount("bone") - 1);
             SpawnItemInWorld(item1WorldPrefab);
+            Sfx.PlayFlat("item_drop");
             UpdateUI();
         }
     }
@@ -109,6 +133,7 @@ public class HUDManager : MonoBehaviour
         {
             SetItemCount("skull", GetItemCount("skull") - 1);
             SpawnItemInWorld(item2WorldPrefab);
+            Sfx.PlayFlat("item_drop");
             UpdateUI();
         }
     }

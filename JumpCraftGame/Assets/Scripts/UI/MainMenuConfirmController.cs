@@ -61,6 +61,7 @@ public class MainMenuConfirmController : MonoBehaviour
     public void OpenMenu()
     {
         confirmPanel.gameObject.SetActive(true);
+        Sfx.PlayFlat("ui_open");
         isOpen = true;
         targetPosition = shownPosition;
         Time.timeScale = 0f; // Pause gameplay while prompt is open
@@ -76,6 +77,7 @@ public class MainMenuConfirmController : MonoBehaviour
     {
         isOpen = false;
         targetPosition = hiddenPosition;
+        Sfx.PlayFlat("ui_close");
         Time.timeScale = 1f; // Resume gameplay
     }
 }

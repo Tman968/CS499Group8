@@ -13,6 +13,8 @@ public class FireVortex : ElementReaction
     protected override float Sustain => 2f;
     protected override float MaxLife => 12f;
 
+    protected override string LoopSound => "vortex_loop";
+
     float radius = 0.5f;
     float spinSign = 1f;
     float scorchTimer;
@@ -22,6 +24,7 @@ public class FireVortex : ElementReaction
     {
         // Spin the way the gust curls past the flame.
         spinSign = flow.x >= 0f ? -1f : 1f;
+        Sfx.Play("vortex_start", Center);
         CameraShake.Add(0.15f);
         ElementLights.Burst(Center, Elements.Glow(Element.Fire), 4f, 2f, 0.3f);
         for (var i = 0; i < 16; i++)

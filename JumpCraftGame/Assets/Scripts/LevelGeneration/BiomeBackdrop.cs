@@ -40,10 +40,17 @@ public class BiomeBackdrop : MonoBehaviour
     //Scales every layer's zoom, so the mountains drift closer without leaving the view.
     public float zoomScale = 0.35f;
 
+    //How far into the forest the view is right now (0 = mountains, 1 = forest). MusicDirector
+    //cross-fades the music and ambience with it, in step with the backdrop.
+    public static float CurrentForest { get; private set; }
+
+    void OnDisable() => CurrentForest = 0f;
+
     void LateUpdate()
     {
         Vector3 cameraPosition = targetCamera.transform.position;
         float forest = ForestAmount(cameraPosition.x);
+        CurrentForest = forest;
 
         //The first layer in each set is its sky.
         for (int i = 0; i < mountainLayers.Length; i++)

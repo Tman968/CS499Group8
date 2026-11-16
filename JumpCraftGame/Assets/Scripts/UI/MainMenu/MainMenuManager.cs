@@ -6,6 +6,7 @@ public class MainMenuManager : MonoBehaviour
     public void StartSinglePlayer()
     {
         // Loads your side-scroller gameplay scene
+        Sfx.PlayFlat("menu_start");
         SceneManager.LoadScene("SpriteTest");
     }
 

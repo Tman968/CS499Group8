@@ -21,8 +21,11 @@ public class ChargedFrost : ElementReaction
     Vector2 groundPoint;
     bool hasGround;
 
+    protected override string LoopSound => "electric_hum_loop";
+
     protected override void OnBegin()
     {
+        Sfx.Play("frost_plate", Center);
         plateHalfWidth = 2;
         SurfaceGrid.BuildPlate(Center, plateHalfWidth, PlateLife, 5f);
         hasGround = SurfaceGrid.FindSurface(Center + Vector2.down * 0.4f, 9f, out var ground);
@@ -43,6 +46,7 @@ public class ChargedFrost : ElementReaction
         if (growTimer > 0f || plateHalfWidth >= 7) return;
         growTimer = 0.35f;
         plateHalfWidth++;
+        Sfx.Play("frost_plate", Center, 0.45f, 1f + plateHalfWidth * 0.04f);
         SurfaceGrid.BuildPlate(Center, plateHalfWidth, PlateLife, 5f);
         if (hasGround) GlazeGround(0.6f + plateHalfWidth * SurfaceGrid.Cell);
         Crystals(8);

@@ -74,6 +74,7 @@ public class BoneProjectile : MonoBehaviour
             deflected = true;
             owner = null;
             spriteRenderer.color = new Color(0.8f, 1f, 0.92f);
+            Sfx.Play("bone_deflect", rb.position);
             ElementFx.WindPuff(rb.position, Vector2.up, rb.linearVelocity);
         }
     }
@@ -90,6 +91,7 @@ public class BoneProjectile : MonoBehaviour
             {
                 if (skeleton.IsDead) return;
                 skeleton.TakeElementalDamage(damage / 20f, rb.linearVelocity.normalized, true);
+                Sfx.Play("bone_hit", rb.position, 0.7f, 1.1f);
                 Shatter();
                 return;
             }
@@ -104,8 +106,9 @@ public class BoneProjectile : MonoBehaviour
         var health = other.GetComponentInParent<PlayerHealth>();
         if (health != null)
         {
+            if (!health.IsDead) Sfx.Play("bone_hit", rb.position);
             health.TakeDamage(damage);
-            Shatter();
+            Shatter(false);
             return;
         }
 
@@ -113,9 +116,10 @@ public class BoneProjectile : MonoBehaviour
         if (body == null || body.bodyType == RigidbodyType2D.Static) Shatter();
     }
 
-    void Shatter()
+    void Shatter(bool clatter = true)
     {
         spent = true;
+        if (clatter) Sfx.Play("bone_clatter", transform.position);
         for (var i = 0; i < 5 && chips.Length > 0; i++)
         {
             var v = new Vector2(Random.Range(-2.5f, 2.5f), Random.Range(1.5f, 4.5f));

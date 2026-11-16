@@ -225,6 +225,7 @@ public class WandStream
             if (prop != null) prop.OnElement(Element.Lightning, power, worldHit.point, aim);
             else SurfaceGrid.Electrify(worldHit.point, worldHit.collider);
             ElementFx.BoltImpact(worldHit.point, worldHit.normal, 1f);
+            Sfx.Play("zap_air", worldHit.point);
         }
         if (boltCount % 3 == 0) ElementLights.Burst(end, Elements.Glow(Element.Lightning), 2.2f, 1.4f, 0.12f);
     }
@@ -242,6 +243,7 @@ public class WandStream
         target.Damage(damage * k, Element.Lightning, dir);
         target.Shock(0.18f);
         ElementFx.BoltImpact(target.Center, -dir, 1f);
+        Sfx.Play("zap_hit", target.Center);
     }
 
     // The bolt leaps on from its target to the nearest skeletons it hasn't hit yet.

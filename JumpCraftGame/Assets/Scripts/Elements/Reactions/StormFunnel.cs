@@ -28,6 +28,7 @@ public class StormFunnel : ElementReaction
     {
         travel = flow.x >= 0f ? 1f : -1f;
         baseY = Center.y;
+        Sfx.Play("storm_start", Center);
         if (SurfaceGrid.FindSurface(Center, 8f, out var ground)) baseY = ground.point.y;
         CameraShake.Add(0.3f);
         ElementLights.Burst(Center, new Color(0.7f, 0.65f, 1f), 5f, 2.2f, 0.35f, true);
@@ -35,6 +36,9 @@ public class StormFunnel : ElementReaction
     }
 
     float TopRadius => 1.5f + intensity * 0.25f;
+
+    protected override string LoopSound => "storm_loop";
+    protected override Vector2 LoopPosition => Center + Vector2.up * height * 0.5f;
 
     protected override void Tick(float dt)
     {
@@ -134,6 +138,8 @@ public class StormFunnel : ElementReaction
                 var from = Center + Vector2.up * height * Random.Range(0.5f, 0.9f);
                 LightningBolts.Spawn(from, target.Center, 0.2f, 2f);
                 ElementFx.BoltImpact(target.Center, (from - target.Center).normalized, 1.4f);
+                Sfx.Play("zap_hit", target.Center, 1f, 0.85f);
+                Sfx.Play("thunder", target.Center, 0.45f, 1.2f);
                 target.Damage(0.6f * target.Vulnerability(Element.Lightning), Element.Lightning, new Vector2(travel, 0.5f));
                 target.Shock(0.5f);
                 ElementLights.Burst(target.Center, Elements.Glow(Element.Lightning), 3f, 1.6f, 0.2f);
@@ -163,6 +169,7 @@ public class StormFunnel : ElementReaction
 
     protected override void OnEnd()
     {
+        Sfx.Play("thunder", Center, 0.8f);
         LightningBolts.Spawn(Center + Vector2.up * height, Center, 0.3f, 2f);
         ElementLights.Burst(Center, Elements.Glow(Element.Lightning), 5f, 2f, 0.3f);
         CameraShake.Add(0.2f);
