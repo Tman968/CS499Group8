@@ -42,8 +42,9 @@ def colored(dur, r, slope, sr=SR):
     n = n_of(dur, sr)
     spec = np.fft.rfft(r.standard_normal(n))
     f = np.fft.rfftfreq(n, 1.0 / sr)
-    f[0] = f[1]
-    spec *= (f / 1000.0) ** (slope / 6.0206)
+    # Flat below 40 Hz: otherwise brown noise piles its energy into rumble no speaker can play.
+    spec *= (np.maximum(f, 40.0) / 1000.0) ** (slope / 6.0206)
+    spec[0] = 0.0
     x = np.fft.irfft(spec, n)
     return x / (np.max(np.abs(x)) + 1e-12)
 
@@ -278,6 +279,22 @@ def formant_shape(f, formants):
 
 
 # ---------------------------------------------------------------------------- effects
+
+def darken(x, corner=3200.0, high_gain=0.45, air=9000.0, sr=SR):
+    """A dark-fantasy tone: everything above corner is turned down to high_gain, and the airy
+    top above `air` is rolled off. Zero-phase, so transients keep their shape."""
+    low = sig.sosfiltfilt(_sos("lowpass", corner, sr, 2), x, axis=0)
+    y = low + (x - low) * high_gain
+    y = sig.sosfiltfilt(_sos("lowpass", air, sr, 2), y, axis=0)
+    # Nothing below hearing: sub-sonic energy only steals loudness from what can be heard.
+    return sig.sosfiltfilt(_sos("highpass", 32.0, sr, 2), y, axis=0)
+
+
+def norm_rms(x, target=0.25):
+    """Scales x so its RMS is target: lets layers be mixed by intent, not by accident of level."""
+    rms = np.sqrt(np.mean(np.square(x))) + 1e-12
+    return x * (target / rms)
+
 
 def soft_clip(x, drive=1.0):
     return np.tanh(x * drive) / np.tanh(drive)
