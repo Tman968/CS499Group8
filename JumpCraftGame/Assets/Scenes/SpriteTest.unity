@@ -650,6 +650,7 @@ GameObject:
   m_Component:
   - component: {fileID: 108378550}
   - component: {fileID: 108378549}
+  - component: {fileID: 108378551}
   m_Layer: 0
   m_Name: Platform Generator
   m_TagString: Untagged
@@ -680,6 +681,7 @@ MonoBehaviour:
   maxY: 3
   maxJumpHeight: 2.5
   cleanupBehindDistance: 15
+  dressing: {fileID: 108378551}
 --- !u!4 &108378550
 Transform:
   m_ObjectHideFlags: 0
@@ -695,6 +697,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &108378551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 108378548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5044cd1802489b9419304bfc8c6fea96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelDressing
+  crateArt: {fileID: 2800000, guid: b018223b2cf52624aa50631aad3e464d, type: 3}
+  brambleArt: {fileID: 2800000, guid: 3e416ff0336730142a415f089347273b, type: 3}
+  bladeArt: {fileID: 2800000, guid: a134eb6c9879a0c45ac45d661ebab2eb, type: 3}
+  liftArt: {fileID: 2800000, guid: 506f4b995ddcd6647b45482683556a03, type: 3}
+  puddleChance: 0.35
+  crateChance: 0.25
+  brambleChance: 0.15
+  pendulumChance: 0.15
+  skeletonChance: 0.3
+  liftChance: 0.3
+  barePlatforms: 1
 --- !u!1 &141183299
 GameObject:
   m_ObjectHideFlags: 0
@@ -2081,6 +2106,8 @@ MonoBehaviour:
   forestLength: 150
   mountainLength: 200
   transitionLength: 60
+  hazeStrength: 0.4
+  zoomScale: 0.35
 --- !u!4 &661759603
 Transform:
   m_ObjectHideFlags: 0
@@ -4574,8 +4601,22 @@ MonoBehaviour:
   maxAmount2: 10
   spawnOffset: {x: 0, y: 3, z: 0}
   dropSpread: 0.2
+  maxHealth: 6
+  fallDeathY: -14
+  knockbackDistance: 1
+  knockbackTime: 0.16
+  walkSpeed: 1.6
+  noticeRange: 14
+  keepDistance: 3
+  ledgeLookAhead: 0.15
+  mass: 60
   boneSprite: {fileID: 21300000, guid: febee23f5bcba2f0f99a8eea0e27c00e, type: 3}
   boneChips: {fileID: 2800000, guid: 615515b4aab9989287d3600e8998cfce, type: 3}
+  boneDamage: 34
+  throwRange: 11
+  throwCooldown: 2.4
+  boneSpeed: 11
+  boneGravityScale: 1
 --- !u!1 &1288105745
 GameObject:
   m_ObjectHideFlags: 0
@@ -7242,7 +7283,10 @@ GameObject:
   - component: {fileID: 2008131728}
   - component: {fileID: 2008131729}
   - component: {fileID: 2008131730}
-  - component: {fileID: 2008131799}
+  - component: {fileID: 2008131736}
+  - component: {fileID: 2008131735}
+  - component: {fileID: 2008131734}
+  - component: {fileID: 2008131733}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -7404,6 +7448,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHealth: 100
   healthBarSlider: {fileID: 28454445}
+  invulnerableSeconds: 0.6
+  deathDelay: 1
 --- !u!114 &2008131729
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7418,30 +7464,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   moveSpeed: 8
   jumpForce: 8
---- !u!114 &2008131799
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2008131723}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b37e99b3fb39ad0504c932f090bc4ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WandShooter
-  staffOrbFrames: {fileID: 2800000, guid: 5b59801fe43f083778f06752f83390dc, type: 3}
-  staffBurstFrames: {fileID: 2800000, guid: e9af7fd60da283c678be4812dd6f704f, type: 3}
-  staffSpark: {fileID: 21300000, guid: 86087461a57b5a53b534bcb9fee991fb, type: 3}
-  staffGlow: {r: 0.45, g: 1, b: 0.4, a: 1}
-  staffDamage: 2
-  skullOrbFrames: {fileID: 2800000, guid: de7fdfb2e1c05bc22d831f20a62bc156, type: 3}
-  skullBurstFrames: {fileID: 2800000, guid: e71ecb840a20f5cf27cbe6ec06c28756, type: 3}
-  skullSpark: {fileID: 21300000, guid: 90d104a9377d7e09ffbcf54c56c431b9, type: 3}
-  skullGlow: {r: 0.75, g: 0.45, b: 1, a: 1}
-  skullDamage: 3
-  orbSpeed: 15
-  orbLifetime: 1.4
+  groundAcceleration: 90
+  airAcceleration: 45
+  iceAcceleration: 7
+  maxLiftSpeed: 9
 --- !u!114 &2008131730
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7487,6 +7513,13 @@ MonoBehaviour:
   - 0.14
   - 0.09
   - 0.07
+  castReleaseFrame: 2
+  weaponTipPixels: 20
+  aimAngleRange: {x: -140, y: 20}
+  channelAimRange: {x: -178, y: 30}
+  channelHoldFps: 7
+  hurtColor: {r: 1, g: 0.35, b: 0.35, a: 1}
+  hurtFlashSeconds: 0.5
 --- !u!1 &2008131731
 GameObject:
   m_ObjectHideFlags: 0
@@ -7519,6 +7552,83 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2008131727}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2008131733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008131723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb9352bb096559c4ab84659408b96d66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElementTestBench
+--- !u!114 &2008131734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008131723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e56427001a181ee4782af35dbd0c1091, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WandCaster
+  recoil:
+  - 2.5
+  - 1.5
+  - 1.2
+  - 26
+  judder:
+  - 2
+  - 1
+  - 4
+  - 1.5
+  frozenHandSeconds: 1.2
+--- !u!114 &2008131735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008131723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0df43461b8b8c5d4196b4862873415f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WandBelt
+  fireWand: {fileID: 2800000, guid: b18875957741e6b47947d261e3cad39f, type: 3}
+  iceWand: {fileID: 2800000, guid: 4a3543c58d1135c4583265189ef07824, type: 3}
+  lightningWand: {fileID: 2800000, guid: c1d58fc2703700d419aa728de28e2cf9, type: 3}
+  windWand: {fileID: 2800000, guid: 8a164ef34fc952e418f7db0b6376c30c, type: 3}
+  hudFont: {fileID: 11400000, guid: 26f825b28b7763d438c6f119fca0f930, type: 2}
+  drainSeconds:
+  - 3.2
+  - 3.8
+  - 2.6
+  - 4.2
+  resetDelay: 0.45
+  refillSeconds: 1.8
+  burnoutRefillSeconds: 5
+  unlimitedCharge: 0
+--- !u!114 &2008131736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008131723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c7bb15086db52c4495dc42498e41de7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElementStatus
+  airResponse: 1
+  playerDamageScale: 12
+  canFreeze: 1
+  freezeSeconds: 3
 --- !u!1 &2018664145
 GameObject:
   m_ObjectHideFlags: 0
@@ -7587,6 +7697,7 @@ MonoBehaviour:
   item2CountText: {fileID: 0}
   item1WorldPrefab: {fileID: 8646124586907638447, guid: 3d27f444fa4423e4ababa23c759e28b1, type: 3}
   item2WorldPrefab: {fileID: 8646124586907638447, guid: 65055ec88a4d9c94ba47d6a676909f3f, type: 3}
+  recipeUnlocked: 0
 --- !u!1 &2065953749
 GameObject:
   m_ObjectHideFlags: 0
