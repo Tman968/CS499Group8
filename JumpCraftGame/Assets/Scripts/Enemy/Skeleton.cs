@@ -80,6 +80,7 @@ public class Skeleton : MonoBehaviour
     private float throwTimer;
     private float knockbackTimer;
     private float knockbackSpeed;
+    private bool noticed;
 
     void Awake()
     {
@@ -160,6 +161,16 @@ public class Skeleton : MonoBehaviour
     {
         if (IsDead || player == null) return;
         flinchTimer -= Time.deltaTime;
+
+        // Spotting the wizard: a chatter of the jaw. While he's close, the war drums play.
+        var near = InNoticeRange();
+        if (near && !noticed) Sfx.Play("skel_alert", bodyCollider.bounds.center);
+        noticed = near;
+        if (near)
+        {
+            var dx = Mathf.Abs(player.position.x - transform.position.x);
+            MusicDirector.ReportCombat(dx <= throwRange ? 1f : 0.6f);
+        }
         if (status.IsStunned) return;
         throwTimer -= Time.deltaTime;
         if (throwTimer > 0f || animator.IsBusy || !Grounded()) return;
@@ -236,6 +247,7 @@ public class Skeleton : MonoBehaviour
 
         var velocity = BoneProjectile.LaunchVelocity(from, target, flightTime, boneGravityScale);
         BoneProjectile.Throw(boneSprite, chips, from, velocity, boneDamage, boneGravityScale, rb);
+        Sfx.Play("skel_throw", from);
     }
 
     /// <summary>
@@ -257,6 +269,7 @@ public class Skeleton : MonoBehaviour
         var dir = Mathf.Abs(direction.x) > 0.01f ? Mathf.Sign(direction.x)
             : player != null ? Mathf.Sign(transform.position.x - player.position.x) : 1f;
         SpawnChips(dir, 3);
+        Sfx.Play("skel_hurt", bodyCollider.bounds.center, 0.8f);
         animator.Face(dir < 0f);
         animator.PlayHurt();
         knockbackSpeed = dir * knockbackDistance * 0.4f / knockbackTime;
@@ -280,6 +293,7 @@ public class Skeleton : MonoBehaviour
         }
 
         // Turn to face the attacker and stagger back.
+        Sfx.Play("skel_hurt", bodyCollider.bounds.center);
         animator.Face(dir < 0f);
         animator.PlayHurt();
         knockbackSpeed = dir * knockbackDistance / knockbackTime;
@@ -304,6 +318,7 @@ public class Skeleton : MonoBehaviour
     {
         if (IsDead) return;
         IsDead = true;
+        Sfx.Play("skel_death", bodyCollider.bounds.center);
         if (animator != null) animator.enabled = true;
         if (animator != null && animator.body != null) animator.body.color = Color.white;
         knockbackTimer = 0f;

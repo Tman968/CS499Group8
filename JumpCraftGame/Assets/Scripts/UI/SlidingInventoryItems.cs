@@ -34,17 +34,20 @@ public class SlidingPanel : MonoBehaviour
     public void TogglePanel()
     {
         isOpen = !isOpen;
+        Sfx.PlayFlat(isOpen ? "ui_open" : "ui_close");
     }
 
     // Explicitly open the panel
     public void OpenPanel()
     {
+        if (!isOpen) Sfx.PlayFlat("ui_open");
         isOpen = true;
     }
 
     // Explicitly close the panel
     public void ClosePanel()
     {
+        if (isOpen) Sfx.PlayFlat("ui_close");
         isOpen = false;
     }
 }

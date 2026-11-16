@@ -128,7 +128,12 @@ public class WandBelt : MonoBehaviour
             idle[i] += dt;
             if (!burnt[i] && idle[i] < resetDelay) continue;
             charge[i] = Mathf.Min(1f, charge[i] + dt / (burnt[i] ? burnoutRefillSeconds : refillSeconds));
-            if (burnt[i] && charge[i] >= 1f) burnt[i] = false;
+            if (burnt[i] && charge[i] >= 1f)
+            {
+                burnt[i] = false;
+                // A burnt-out wand is usable again: a soft chime says so.
+                Sfx.PlayFlat("wand_ready", 1f, 1f + 0.06f * i);
+            }
         }
     }
 }

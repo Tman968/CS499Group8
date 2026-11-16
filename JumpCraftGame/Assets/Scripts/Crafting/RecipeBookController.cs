@@ -67,6 +67,7 @@ public class RecipeBookController : MonoBehaviour
     {
         isOpen = !isOpen;
         targetPosition = isOpen ? shownPosition : hiddenPosition;
+        Sfx.PlayFlat(isOpen ? "ui_open" : "ui_close");
     }
 
     private void CheckForUnlock()

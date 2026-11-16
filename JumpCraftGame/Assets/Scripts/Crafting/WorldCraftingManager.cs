@@ -62,6 +62,7 @@ public class WorldCraftingManager : MonoBehaviour
                     }
 
                     Debug.Log("Crafting successful! Spawned: " + recipe.resultPrefab.name);
+                    Sfx.PlayFlat("craft");
                 }
 
                 // Consume/destroy the exact number of ingredients required by the recipe

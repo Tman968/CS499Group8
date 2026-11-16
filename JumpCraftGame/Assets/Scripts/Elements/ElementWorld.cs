@@ -251,11 +251,13 @@ public class ElementWorld : MonoBehaviour
                 status.Damage(0.07f * m.power, Element.Fire, dir, false);
                 status.Ignite(2.5f, 0.55f);
                 ElementFx.FireSplash(hit.point, hit.normal);
+                Sfx.Play("fire_hit", hit.point);
                 break;
             case Element.Ice:
                 status.Damage(0.3f * m.power, Element.Ice, dir);
                 status.ApplyChill(0.22f * m.power);
                 ElementFx.IceImpact(hit.point, hit.normal);
+                Sfx.Play("ice_hit", hit.point, 1.2f, 0.85f);
                 break;
         }
         m.dead = true;
@@ -269,10 +271,13 @@ public class ElementWorld : MonoBehaviour
             case Element.Fire:
                 if (surface) SurfaceGrid.ApplyFire(hit, m.power * 0.35f);
                 ElementFx.FireSplash(hit.point, hit.normal);
+                Sfx.Play("fire_hit", hit.point, 0.7f);
                 break;
             case Element.Ice:
                 if (surface) SurfaceGrid.ApplyIce(hit, 0.36f * m.power);
                 ElementFx.IceImpact(hit.point, hit.normal);
+                Sfx.Play("ice_hit", hit.point);
+                if (surface) Sfx.Play("frost_form", hit.point);
                 break;
             case Element.Wind:
                 if (Random.value < 0.3f) ElementFx.WindPuff(hit.point, hit.normal, m.vel);

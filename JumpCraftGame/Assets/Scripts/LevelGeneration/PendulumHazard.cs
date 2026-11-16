@@ -76,6 +76,7 @@ public class PendulumHazard : MonoBehaviour, IElementReactive
                 if (frost >= 1f && frozen <= 0f)
                 {
                     frozen = 3.5f;
+                    Sfx.Play("freeze", blade.position);
                     ElementFx.IceShatter(blade.position, 10, Vector2.zero);
                 }
                 break;
@@ -101,7 +102,11 @@ public class PendulumHazard : MonoBehaviour, IElementReactive
         {
             // Ice wears off and the swing recovers its pace.
             speed = Mathf.MoveTowards(speed, 1f, 0.12f * dt);
+            var lastPhase = phase;
             phase += dt * Mathf.PI * 2f / period * speed;
+            // A heavy swoosh each time the blade sweeps through the bottom of its arc.
+            if (Mathf.FloorToInt(phase / Mathf.PI) != Mathf.FloorToInt(lastPhase / Mathf.PI))
+                Sfx.Play("pendulum_whoosh", blade.position, Mathf.Clamp01(speed * (1f + swingBoost)), 0.8f + 0.25f * speed);
         }
         frost = Mathf.Max(0f, frost - 0.06f * dt);
         swingBoost = Mathf.Max(0f, swingBoost - 0.15f * dt);
@@ -145,6 +150,7 @@ public class PendulumHazard : MonoBehaviour, IElementReactive
 
         charge -= dt;
         glow.enabled = charge > 0f;
+        if (charge > 0f) Sfx.Loop(this, "electric_hum_loop", bladePos, Mathf.Clamp01(charge));
         if (charge > 0f)
         {
             glow.intensity = 0.6f + Random.value * 0.8f;
@@ -182,6 +188,7 @@ public class PendulumHazard : MonoBehaviour, IElementReactive
             else status.Damage(skeletonDamage * Mathf.Max(0.3f, speed), Element.Wind, bladeVelocity.normalized);
             status.AddPush(new Vector2(Mathf.Sign(bladeVelocity.x) * 7f * speed, 3f));
             ElementFx.BoltImpact(other.ClosestPoint(blade.position), Vector2.up, 0.6f);
+            Sfx.Play("pendulum_hit", blade.position, Mathf.Max(0.5f, speed));
         }
     }
 }

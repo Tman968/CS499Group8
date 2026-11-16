@@ -29,9 +29,14 @@ public class PlayerMovement : MonoBehaviour
     private bool jumpQueued;
     private float walkVelocity;
     private readonly RaycastHit2D[] groundHits = new RaycastHit2D[4];
+    private bool wasGrounded = true;
+    private float fallSpeed;    // fastest downward speed since leaving the ground, for the landing sound
 
     //Read by CameraFollow to track the height of the ground the player is standing on.
     public bool IsGrounded => isGrounded;
+
+    /// <summary>True while the feet are on solid ground this physics step (not just since the last landing).</summary>
+    public bool OnGround { get; private set; }
 
     /// <summary>True while standing on frost, an ice sheet or an ice block.</summary>
     public bool OnIce { get; private set; }
@@ -78,6 +83,8 @@ public class PlayerMovement : MonoBehaviour
         // 4. Death check (falling below y = -8): Moves player back to main menu (death screen can be implemented later, or have a revive system with multiplayer?)
         if (transform.position.y <= -8)
         {
+            Sfx.PlayFlat("sting_death");
+            MusicDirector.PlayerDied();
             UnityEngine.SceneManagement.SceneManager.LoadScene("GameMenu");
         }
     }
@@ -93,6 +100,18 @@ public class PlayerMovement : MonoBehaviour
         var grounded = CheckGround(out var feet);
         var surface = grounded ? SurfaceGrid.Probe(feet) : default;
         OnIce = grounded && surface.slippery;
+        OnGround = grounded;
+
+        // Landing: a soft step down, a thump, or a heavy crunch after a long fall.
+        if (!grounded) fallSpeed = Mathf.Max(fallSpeed, -v.y);
+        else if (!wasGrounded && !dead)
+        {
+            if (fallSpeed > 15f) Sfx.Play("land_heavy", feet);
+            else if (fallSpeed > 4f) Sfx.Play("land", feet, Mathf.InverseLerp(4f, 15f, fallSpeed) * 0.6f + 0.4f);
+            else if (fallSpeed > 1f) Sfx.Footstep(feet, 0.7f);
+            fallSpeed = 0f;
+        }
+        wasGrounded = grounded;
 
         // Walking is tracked apart from drift (wind, blasts), so a gust can carry the wizard along
         // without his own steering cancelling it out. Solid ground soon stops a shove; ice doesn't.
@@ -112,6 +131,7 @@ public class PlayerMovement : MonoBehaviour
             jumpQueued = false;
             v.y = jumpForce;
             isGrounded = false; // Prevent mid-air jumping
+            Sfx.Play("jump", feet);
         }
 
         // Updrafts, gusts and wand recoil push up and down.

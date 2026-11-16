@@ -13,6 +13,9 @@ public class PlasmaBurst : ElementReaction
     protected override float Sustain => 0.8f;
     protected override float MaxLife => 10f;
 
+    protected override string LoopSound => "plasma_loop";
+    protected override float LoopVolume => Fade(0.5f) * (RecentlyFed ? 1f : 0.7f);
+
     float ringAge = 0f;
     float ringRadius;
     float ringMax;
@@ -23,6 +26,7 @@ public class PlasmaBurst : ElementReaction
     void Burst(float scale)
     {
         var c = Center;
+        Sfx.Play("plasma_boom", c, Mathf.Clamp01(0.4f + 0.6f * scale));
         ringAge = 0f;
         ringMax = 3.2f * scale;
         pulseTimer = 0.5f;

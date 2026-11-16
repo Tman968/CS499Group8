@@ -37,6 +37,11 @@ public class PlayerHealth : MonoBehaviour
     void Update()
     {
         invulnerableTimer -= Time.deltaTime;
+
+        // Low on health: a heartbeat, louder the closer to death.
+        var fraction = currentHealth / maxHealth;
+        if (!isDead && fraction < 0.35f)
+            Sfx.Loop(this, "heartbeat", transform.position, Mathf.Lerp(1f, 0.35f, fraction / 0.35f));
     }
 
     public void TakeDamage(float damageAmount)
@@ -57,6 +62,10 @@ public class PlayerHealth : MonoBehaviour
             wizard.Flash();
         }
 
+        // Scrapes (a burn's tick, a thorn) are softer than a real blow.
+        if (currentHealth > 0)
+            Sfx.Play("hurt", transform.position, Mathf.Lerp(0.35f, 1f, damageAmount / 25f));
+
         if (currentHealth <= 0)
         {
             Die();
@@ -67,6 +76,9 @@ public class PlayerHealth : MonoBehaviour
     {
         isDead = true;
         Debug.Log("Player has died!");
+        Sfx.Play("death", transform.position);
+        Sfx.PlayFlat("sting_death");
+        MusicDirector.PlayerDied();
 
         // Same outcome as falling off the map for now: back to the main menu
         Invoke(nameof(ReturnToMenu), deathDelay);

@@ -97,6 +97,7 @@ public class FlammableProp : MonoBehaviour, IElementReactive
         if (burning) return;
         burning = true;
         burnLeft = burnSeconds;
+        Sfx.Play("ignite", body.bounds.center);
         glow = ElementLights.MakeLight(transform);
         glow.color = Elements.Glow(Element.Fire);
         glow.enabled = true;
@@ -107,6 +108,7 @@ public class FlammableProp : MonoBehaviour, IElementReactive
     {
         burning = false;
         heat = 0f;
+        Sfx.Play("prop_douse", body.bounds.center);
         if (glow != null) Destroy(glow.gameObject);
         ElementFx.SteamPuff(body.bounds.center, 6, 1f);
     }
@@ -137,6 +139,7 @@ public class FlammableProp : MonoBehaviour, IElementReactive
         burnLeft -= dt * fanned;
 
         var t = 1f - burnLeft / burnSeconds;
+        Sfx.Loop(this, "burn_loop", b.center, Mathf.Lerp(0.55f, 1f, Mathf.Min(1f, t * 2f)) * Mathf.Min(1.2f, fanned) / 1.2f);
         spriteRenderer.color = Color.Lerp(new Color(1f, 0.8f, 0.7f), new Color(0.2f, 0.12f, 0.1f), t);
 
         // Flames all over it, more as it gets going.
@@ -185,6 +188,7 @@ public class FlammableProp : MonoBehaviour, IElementReactive
     void BurnAway()
     {
         var b = body.bounds;
+        Sfx.Play("prop_burnaway", b.center);
         for (var i = 0; i < 30; i++)
         {
             var p = new Vector2(Random.Range(b.min.x, b.max.x), Random.Range(b.min.y, b.max.y));

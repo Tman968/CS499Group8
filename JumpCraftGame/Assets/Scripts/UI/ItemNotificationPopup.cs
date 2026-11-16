@@ -50,9 +50,11 @@ public class ItemNotificationPopup : MonoBehaviour
     }
 
     // Pass any custom text message you want into this function!
-    public void TriggerPopup(string customMessage)
+    // chime: false when the caller already plays a sound of its own for the event.
+    public void TriggerPopup(string customMessage, bool chime = true)
     {
         if (notificationPanel == null) return;
+        if (chime) Sfx.PlayFlat("notify");
 
         if (messageText != null)
         {

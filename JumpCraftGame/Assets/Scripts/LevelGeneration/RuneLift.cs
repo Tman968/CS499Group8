@@ -34,6 +34,7 @@ public class RuneLift : MonoBehaviour, IElementReactive
     float lowY, highY;
     float charge;
     float iced;
+    bool moving;
     Texture2D art;
 
     public static RuneLift Create(Texture2D art, float centerX, float lowY, float highY, Transform parent)
@@ -69,7 +70,11 @@ public class RuneLift : MonoBehaviour, IElementReactive
         {
             var was = charge;
             charge = Mathf.Min(1f, charge + 0.1f * power);
-            if (was <= 0f) ElementLights.Burst(body.position, Elements.Glow(Element.Lightning), 3f, 2f, 0.3f);
+            if (was <= 0f)
+            {
+                ElementLights.Burst(body.position, Elements.Glow(Element.Lightning), 3f, 2f, 0.3f);
+                Sfx.Play("lift_charge", body.position);
+            }
         }
         else if (element == Element.Ice)
         {
@@ -86,17 +91,26 @@ public class RuneLift : MonoBehaviour, IElementReactive
         var dt = Time.fixedDeltaTime;
         iced = Mathf.Max(0f, iced - dt);
         charge = Mathf.Max(0f, charge - drainPerSecond * dt);
-        if (iced > 0f) return;
+        if (iced > 0f)
+        {
+            moving = false;
+            return;
+        }
         var y = body.position.y;
         var target = charge > 0f ? highY : lowY;
         var speed = charge > 0f ? riseSpeed : sinkSpeed;
         var next = Mathf.MoveTowards(y, target, speed * dt);
         body.MovePosition(new Vector2(body.position.x, next));
+        // Stone grinding while it moves, and a thud as it settles at either end.
+        var wasMoving = moving;
+        moving = Mathf.Abs(next - y) > 0.0001f;
+        if (wasMoving && !moving) Sfx.Play("lift_stop", body.position);
     }
 
     void Update()
     {
         var pos = body.position;
+        if (moving) Sfx.Loop(this, "lift_loop", pos, charge > 0f ? 1f : 0.7f, charge > 0f ? 1f : 0.85f);
         var w = art.width / 16f;
         var left = pos.x - w * 0.5f;
         var top = pos.y;

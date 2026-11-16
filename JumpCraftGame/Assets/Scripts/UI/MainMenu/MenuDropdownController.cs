@@ -113,6 +113,7 @@ public class MenuDropdownController : MonoBehaviour
 
     void UpdateTargets()
     {
+        Sfx.PlayFlat(isMultiplayerOpen || isPreferencesOpen || isPlayerStatsOpen ? "ui_open" : "ui_close");
         if (multiplayerPanel != null)
         {
             if (isMultiplayerOpen) multiplayerPanel.gameObject.SetActive(true);
