@@ -4,6 +4,7 @@ public class CameraFollow : MonoBehaviour
 {
 
     public Transform player;
+    public Transform player2;
 
     public float xOffset = 0f;
 
@@ -42,24 +43,50 @@ public class CameraFollow : MonoBehaviour
     // Update is called once per frame
     void LateUpdate()
     {
-        if (player == null)
-            return;
+        // Check which players are alive
+        PlayerHealth health1 = player != null
+            ? player.GetComponent<PlayerHealth>()
+            : null;
 
-        //Only update the ground height when the player lands, so the camera doesn't bob up and down with every jump.
+        PlayerHealth health2 = player2 != null
+            ? player2.GetComponent<PlayerHealth>()
+            : null;
+
+        bool player1Alive = player != null &&
+                            (health1 == null || !health1.IsDead);
+
+        bool player2Alive = player2 != null &&
+                            (health2 == null || !health2.IsDead);
+
+        // Choose which player to follow
+        if (player1Alive)
+        {
+            // Keep Player 1 as the camera target
+        }
+        else if (player2Alive)
+        {
+            player = player2;
+        }
+        else
+        {
+            return;
+        }
+
+        playerMovement = player.GetComponent<PlayerMovement>();
+
+        // Only update the ground height when the player lands
         if (playerMovement == null || playerMovement.IsGrounded)
             groundY = player.position.y;
 
         float t = Mathf.InverseLerp(lowestGroundY, highestGroundY, groundY);
         float targetY = Mathf.Lerp(minY, maxY, t);
 
-        //Follow the player up if they jump higher than the screen shows, and down when they fall, but never below minY.
         targetY = Mathf.Max(targetY, player.position.y + headroom - cam.orthographicSize);
         targetY = Mathf.Min(targetY, player.position.y + cam.orthographicSize - 1f);
         targetY = Mathf.Max(targetY, minY);
 
         float y = Mathf.SmoothDamp(transform.position.y, targetY, ref yVelocity, verticalSmoothTime);
 
-        //Sets position of the camera to the players X position -> Makes the player in the center of the screen (for x values only) at all times.
         transform.position = new Vector3(player.position.x, y, fixedZ);
     }
 }

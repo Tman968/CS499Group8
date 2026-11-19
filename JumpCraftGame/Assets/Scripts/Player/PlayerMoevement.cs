@@ -57,6 +57,8 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+
+        CheckAllPlayersDead();
         // Make sure a keyboard is connected
         if (Keyboard.current == null) return;
 
@@ -118,24 +120,32 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // 4. Death check (falling below y = -8)
-        if (transform.position.y <= -8)
+        if (transform.position.y <= -8 && health != null)
         {
-            bool allPlayersDead = true;
+            health.DieFromFalling();
+        }
+    }
 
-            foreach (var player in activePlayers)
-            {
-                // If any player is still alive (above or at y > -8), then not everyone is dead yet
-                if (player != null && player.transform.position.y > -8)
-                {
-                    allPlayersDead = false;
-                    break;
-                }
-            }
+    private static void CheckAllPlayersDead()
+    {
+        bool allPlayersDead = true;
 
-            if (allPlayersDead)
+        foreach (var player in activePlayers)
+        {
+            if (player == null) continue;
+
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+
+            if (playerHealth != null && !playerHealth.IsDead)
             {
-                SceneManager.LoadScene("GameMenu");
+                allPlayersDead = false;
+                break;
             }
+        }
+
+        if (allPlayersDead && activePlayers.Count > 0)
+        {
+            SceneManager.LoadScene("GameMenu");
         }
     }
 

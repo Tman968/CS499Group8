@@ -4,9 +4,11 @@ using UnityEngine;
 public class PlatformGenerator : MonoBehaviour
 {
     public Transform player;
+    public Transform player2;
     public Transform startingPlatform;
     public GameObject platformPrefab;
     public GameObject portalPrefab;
+    public GameObject craftingPlatformPrefab;
     public Camera mainCamera;
 
     public float gapBetweenPlatforms = 4f;
@@ -23,6 +25,7 @@ public class PlatformGenerator : MonoBehaviour
     private int maxPortalPlatforms;
     public LevelManager levelManager;
     private int portalSpawnIndex;
+    private int craftingPlatformSpawnIndex;
     private int platformCount = 0;
     private bool portalSpawned = false;
 
@@ -67,6 +70,7 @@ public class PlatformGenerator : MonoBehaviour
         //Generate the random platform count for the level (when the portal will spawn)
         CalculatePortalRange();
         portalSpawnIndex = Random.Range(minPortalPlatforms, maxPortalPlatforms + 1);
+        craftingPlatformSpawnIndex = Random.Range(2, portalSpawnIndex);
         Debug.Log("Level " + currentLevel +
           " portal will spawn at platform " + portalSpawnIndex);
 
@@ -81,7 +85,40 @@ public class PlatformGenerator : MonoBehaviour
 
     void GeneratePlatforms()
     {
-        float spawnLimit = player.position.x + spawnAheadDistance;
+        PlayerHealth health1 = player != null
+            ? player.GetComponent<PlayerHealth>()
+            : null;
+
+        PlayerHealth health2 = player2 != null
+            ? player2.GetComponent<PlayerHealth>()
+            : null;
+
+        bool player1Alive = player != null &&
+                            (health1 == null || !health1.IsDead);
+
+        bool player2Alive = player2 != null &&
+                            (health2 == null || !health2.IsDead);
+
+        Transform activePlayer = null;
+
+        if (player1Alive && player2Alive)
+        {
+            activePlayer = player.position.x >= player2.position.x
+                ? player
+                : player2;
+        }
+        else if (player1Alive)
+        {
+            activePlayer = player;
+        }
+        else if (player2Alive)
+        {
+            activePlayer = player2;
+        }
+
+        if (activePlayer == null) return;
+
+        float spawnLimit = activePlayer.position.x + spawnAheadDistance;
         float randomHeight = 0f;
         float highestY = 0f;
 
@@ -103,6 +140,12 @@ public class PlatformGenerator : MonoBehaviour
 
                 Debug.Log("Spawning portal at platform " + platformCount);
             }
+            else if (platformCount == craftingPlatformSpawnIndex)
+            {
+                prefabToSpawn = craftingPlatformPrefab;
+
+                Debug.Log("Spawning crafting platform at platform " + platformCount);
+            }
             else
             {
                 prefabToSpawn = platformPrefab;
@@ -114,7 +157,6 @@ public class PlatformGenerator : MonoBehaviour
                 Quaternion.identity
             );
 
-            // Connect the portal to the LevelManager
             if (prefabToSpawn == portalPrefab)
             {
                 PortalTrigger portalTrigger =
@@ -240,6 +282,8 @@ public class PlatformGenerator : MonoBehaviour
             minPortalPlatforms,
             maxPortalPlatforms + 1
         );
+        // New level crafting Island generation
+        craftingPlatformSpawnIndex = Random.Range(2, portalSpawnIndex);
 
         Debug.Log("Starting Level. Portal will spawn at platform " + portalSpawnIndex);
 

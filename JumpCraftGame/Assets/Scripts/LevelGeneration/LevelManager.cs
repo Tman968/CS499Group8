@@ -3,38 +3,38 @@ using UnityEngine;
 public class LevelManager : MonoBehaviour
 {
     public Transform player;
+    public Transform player2;
+
     public PlatformGenerator platformGenerator;
     public GameObject startingPlatformPrefab;
 
     public int currentLevel = 1;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
 
     public void AdvanceLevel()
     {
         currentLevel++;
-
         platformGenerator.currentLevel = currentLevel;
 
         Debug.Log("Advancing to Level " + currentLevel);
 
-        // Reset platform generation and create a new starting platform
-        Vector3 newPlayerPosition = platformGenerator.ResetForNewLevel(
-            startingPlatformPrefab
-        );
+        Vector3 newPlayerPosition =
+            platformGenerator.ResetForNewLevel(startingPlatformPrefab);
 
-        // Move the player to the new starting position
-        player.position = newPlayerPosition;
+        bool player1Alive = player != null &&
+                            !player.GetComponent<PlayerHealth>().IsDead;
+
+        bool player2Alive = player2 != null &&
+                            !player2.GetComponent<PlayerHealth>().IsDead;
+
+        if (player1Alive)
+            player.position = newPlayerPosition;
+
+        if (player2Alive)
+        {
+            player2.position = player1Alive
+                ? newPlayerPosition + Vector3.right
+                : newPlayerPosition;
+        }
 
         Debug.Log("Level " + currentLevel + " started!");
     }

@@ -13,8 +13,7 @@ public class PlayerHealth : MonoBehaviour
     [Header("Hit Settings")]
     [Tooltip("Seconds after a hit during which further hits do nothing")]
     public float invulnerableSeconds = 0.6f;
-    [Tooltip("Seconds between dying and returning to the main menu")]
-    public float deathDelay = 1f;
+
 
     private float invulnerableTimer;
     private bool isDead;
@@ -63,17 +62,27 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    public void DieFromFalling()
+    {
+        if (!isDead)
+        {
+            Die();
+        }
+    }
+
     void Die()
     {
         isDead = true;
-        Debug.Log("Player has died!");
+        Debug.Log(gameObject.name + " has died!");
 
-        // Same outcome as falling off the map for now: back to the main menu
-        Invoke(nameof(ReturnToMenu), deathDelay);
-    }
+        foreach (Renderer renderer in GetComponentsInChildren<Renderer>())
+        {
+            renderer.enabled = false;
+        }
 
-    void ReturnToMenu()
-    {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("GameMenu");
+        foreach (Collider2D playerCollider in GetComponents<Collider2D>())
+        {
+            playerCollider.enabled = false;
+        }
     }
 }

@@ -91,23 +91,45 @@ public class Skeleton : MonoBehaviour
 
     void Start()
     {
-        // Find Player 1 and Player 2 in the scene
+        UpdateTarget();
+    }
+
+    void UpdateTarget()
+    {
         GameObject p1 = GameObject.FindWithTag("Player1");
         GameObject p2 = GameObject.FindWithTag("Player2");
         GameObject fallback = GameObject.FindWithTag("Player");
+
+        // Ignore players who have died.
+        if (p1 != null && p1.GetComponent<PlayerHealth>() != null &&
+            p1.GetComponent<PlayerHealth>().IsDead)
+        {
+            p1 = null;
+        }
+
+        if (p2 != null && p2.GetComponent<PlayerHealth>() != null &&
+            p2.GetComponent<PlayerHealth>().IsDead)
+        {
+            p2 = null;
+        }
+
+        if (fallback != null && fallback.GetComponent<PlayerHealth>() != null &&
+            fallback.GetComponent<PlayerHealth>().IsDead)
+        {
+            fallback = null;
+        }
 
         GameObject targetPlayer = null;
 
         if (p1 != null && p2 != null)
         {
-            // If both players exist (Co-op mode), target the closest one
             float dist1 = Vector3.Distance(transform.position, p1.transform.position);
             float dist2 = Vector3.Distance(transform.position, p2.transform.position);
+
             targetPlayer = dist1 < dist2 ? p1 : p2;
         }
         else
         {
-            // Otherwise, pick whichever player is available
             targetPlayer = p1 != null ? p1 : (p2 != null ? p2 : fallback);
         }
 
@@ -116,6 +138,12 @@ public class Skeleton : MonoBehaviour
             player = targetPlayer.transform;
             playerBody = targetPlayer.GetComponent<Rigidbody2D>();
             playerCollider = targetPlayer.GetComponent<Collider2D>();
+        }
+        else
+        {
+            player = null;
+            playerBody = null;
+            playerCollider = null;
         }
     }
 
@@ -147,7 +175,10 @@ public class Skeleton : MonoBehaviour
 
     void Update()
     {
-        if (IsDead || player == null) return;
+        if (IsDead) return;
+        UpdateTarget();
+        if (player == null) return;
+
         throwTimer -= Time.deltaTime;
         if (throwTimer > 0f || animator.IsBusy || !Grounded()) return;
 
