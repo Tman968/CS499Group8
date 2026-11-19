@@ -7,6 +7,8 @@ Unity Version: 6000.6.0f1
 ## Project layout
 
 - `JumpCraftGame/` – the Unity project (open this folder in Unity Hub with **Add > Add project from disk**)
+- `JumpCraftWeb/` – the React Web Interface (See "JumpCraft Website Dev/Build" for information regarding developing and building)
+- `JumpCraftServer/` – the Express server backend (See "JumpCraft Server Setup (Shared Database)" for information regarding server setup)
 
 ## Building for the web (WebGL)
 
@@ -132,3 +134,38 @@ Run these commands from the **`JumpCraftWeb`** folder:
 | `npm run build` | Build the React website for production |
 | `npm run preview` | Preview the production build locally |
 | `npm run lint` | Run the project's linter, if the script is defined in `package.json` |
+
+# JumpCraft Server Setup (Shared Database)
+
+The Express backend runs locally in `JumpCraftServer/` and connects to the **existing shared Supabase PostgreSQL database**. Team members do **not** need to create a separate Supabase project or install PostgreSQL.
+
+1. Install **Node.js/npm** and **Git**, then clone the repository
+2. From the repository root, install backend dependencies:
+
+   ```powershell
+   cd JumpCraftServer
+   npm ci
+   ```
+
+3. Create `JumpCraftServer/.env` (not committed to Git):
+
+   ```env
+   DATABASE_URL=your-shared-supabase-session-pooler-connection-string
+   SESSION_SECRET=your-own-random-secret
+   ```
+
+   Obtain the database credentials securely from the project maintainer; use a restricted database account where possible. Generate a unique local session secret with:
+
+   ```powershell
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+4. Start the backend with `npm run dev` (from `JumpCraftServer/`). Verify `http://localhost:3001/api/db-health` returns success.
+5. If not started already, open a **second terminal**, and start the website:
+
+   ```powershell
+   cd JumpCraftWeb
+   npm run dev
+   ```
+
+   Open `http://localhost:5173`

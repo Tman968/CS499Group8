@@ -8,7 +8,7 @@ import connectPgSimple from 'connect-pg-simple';
 const app = express();
 const PORT = 3001;
 
-// Allow requests from our React website
+// Allow requests from React website
 app.use(cors({
     origin: 'http://localhost:5173',
     credentials: true
@@ -17,7 +17,7 @@ app.use(cors({
 // Allow the server to read JSON request bodies
 app.use(express.json());
 
-
+// Session management using PostgreSQL as the session store
 const PgSession = connectPgSimple(session);
 
 if (!process.env.SESSION_SECRET ||
