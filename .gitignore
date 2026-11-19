@@ -78,3 +78,11 @@ desktop.ini
 /JumpCraftWeb/node_modules/
 /JumpCraftWeb/dist/
 /JumpCraftWeb/dist-ssr/
+
+# JumpCraft environment variables and credentials
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log

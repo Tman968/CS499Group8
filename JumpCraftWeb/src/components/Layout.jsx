@@ -1,6 +1,11 @@
-
 import { useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
+import {
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate
+} from "react-router";
+import { useAuth } from "../context/AuthContext";
 
 const menuItems = [
   { name: "Play", path: "/" },
@@ -16,17 +21,37 @@ const pageTitles = {
   "/friends": "Friends",
   "/statistics": "Statistics",
   "/achievements": "Achievements",
-  "/profile": "EthanEthos",
+  "/profile": "Profile",
   "/settings": "Settings",
   "/play": "JumpCraft",
 };
 
 function Layout() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const { player, logout } = useAuth();
 
   const isProfile = location.pathname === "/profile";
-  const title = pageTitles[location.pathname] || "JumpCraft";
+
+  const title = isProfile && player
+    ? player.username
+    : pageTitles[location.pathname] || "JumpCraft";
+
+  async function handleLogout() {
+    setLogoutError("");
+
+    try {
+      await logout();
+      setMenuOpen(false);
+      navigate("/login", { replace: true });
+    } catch (error) {
+      setLogoutError(error.message);
+    }
+  }
 
   return (
     <div className="site-frame">
@@ -44,10 +69,10 @@ function Layout() {
         <h1 className="site-title">{title}</h1>
 
         <NavLink
-          to={isProfile ? "/" : "/profile"}
+          to={isProfile ? "/" : player ? "/profile" : "/login"}
           className={`profile-button ${isProfile ? "home-button" : ""}`}
         >
-          {isProfile ? "Lobby" : "Profile"}
+          {isProfile ? "Lobby" : player?.username ?? "Log In"}
         </NavLink>
       </header>
 
@@ -86,13 +111,27 @@ function Layout() {
               ))}
             </nav>
 
-            <NavLink
-              to="/login"
-              className="sidebar-link logout"
-              onClick={() => setMenuOpen(false)}
-            >
-              Logout
-            </NavLink>
+            {player ? (
+              <button
+                type="button"
+                className="sidebar-link logout"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            ) : (
+              <NavLink
+                to="/login"
+                className="sidebar-link"
+                onClick={() => setMenuOpen(false)}
+              >
+                Log In
+              </NavLink>
+            )}
+
+            {logoutError && (
+              <p role="alert">{logoutError}</p>
+            )}
           </aside>
         </>
       )}

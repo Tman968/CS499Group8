@@ -1,10 +1,13 @@
 import { Routes, Route, Navigate, Link } from "react-router";
 import Layout from "./components/Layout";
+import AccountPage from "./components/AccountPage";
 import "./App.css";
+import { AuthProvider } from "./context/AuthContext";
+import RequireAuth from "./components/RequireAuth";
 
 function Home() {
   return (
-    <section className="placeholder-page">
+    <section className="placeholder-page lobby-page">
       <h2>Player Lobby</h2>
       <p>Our multiplayer lobby will go here.</p>
 
@@ -29,8 +32,7 @@ function Login() {
     <div className="login-page">
       <h1>JumpCraft</h1>
       <section className="login-panel">
-        <h2>Sign in</h2>
-        <p>Login functionality coming soon.</p>
+        <AccountPage />
       </section>
     </div>
   );
@@ -55,21 +57,28 @@ function Game() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <AuthProvider>
+      <Routes>
+        {/* Public authentication pages */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/account" element={<Login />} />
 
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/friends" element={<PlaceholderPage name="Friends" />} />
-        <Route path="/statistics" element={<PlaceholderPage name="Statistics" />} />
-        <Route path="/achievements" element={<PlaceholderPage name="Achievements" />} />
-        <Route path="/profile" element={<PlaceholderPage name="Profile" />} />
-        <Route path="/settings" element={<PlaceholderPage name="Settings" />} />
-        <Route path="/play" element={<Game />} />
-      </Route>
+        {/* Protected JumpCraft pages */}
+        <Route element={<RequireAuth />}>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/friends" element={<PlaceholderPage name="Friends" />} />
+            <Route path="/statistics" element={<PlaceholderPage name="Statistics" />} />
+            <Route path="/achievements" element={<PlaceholderPage name="Achievements" />} />
+            <Route path="/profile" element={<PlaceholderPage name="Profile" />} />
+            <Route path="/settings" element={<PlaceholderPage name="Settings" />} />
+            <Route path="/play" element={<Game />} />
+          </Route>
+        </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }
 
