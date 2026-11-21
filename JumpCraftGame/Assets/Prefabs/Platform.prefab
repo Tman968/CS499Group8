@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1138060443619067274}
   - component: {fileID: 6529071092371948778}
   - component: {fileID: 3465791920499641919}
+  - component: {fileID: 7371498037711629857}
   m_Layer: 0
   m_Name: Platform
   m_TagString: Untagged
@@ -139,3 +140,15 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 3.875, y: 0.75}
   m_EdgeRadius: 0
+--- !u!114 &7371498037711629857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2849916755566283104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 429b5a89f5952f2489c68cf17a04cba0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlatformScore

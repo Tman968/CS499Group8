@@ -145,6 +145,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (allPlayersDead && activePlayers.Count > 0)
         {
+            ScoreManager.Instance.SaveHighScore();
             SceneManager.LoadScene("GameMenu");
         }
     }

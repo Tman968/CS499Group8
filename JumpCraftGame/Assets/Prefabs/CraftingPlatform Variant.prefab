@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2765559550397653441}
   - component: {fileID: 5540026987406617364}
   - component: {fileID: 7898849519467772604}
+  - component: {fileID: -3854735060343510384}
   m_Layer: 0
   m_Name: CraftingPlatform Variant
   m_TagString: CraftingIsland
@@ -187,6 +188,18 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 4, y: 0.2}
   m_EdgeRadius: 0
+--- !u!114 &-3854735060343510384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6590497308231101515}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 429b5a89f5952f2489c68cf17a04cba0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlatformScore
 --- !u!1 &8896756001024144548
 GameObject:
   m_ObjectHideFlags: 0
